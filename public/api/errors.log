@@ -1,0 +1,14 @@
+[10-Aug-2022 09:58:44 Europe/Berlin] PHP Warning:  PDOStatement::execute(): SQLSTATE[HY093]: Invalid parameter number: number of bound variables does not match number of tokens in E:\balcao-venda-vue-php\public\api\database\DatabaseController.php on line 128
+[10-Aug-2022 09:58:44 Europe/Berlin] PHP Fatal error:  ["HY093",null,null] in E:\balcao-venda-vue-php\public\api\database\DatabaseController.php on line 66
+[10-Aug-2022 10:00:05 Europe/Berlin] PHP Warning:  PDOStatement::execute(): SQLSTATE[HY093]: Invalid parameter number: number of bound variables does not match number of tokens in E:\balcao-venda-vue-php\public\api\database\DatabaseController.php on line 128
+[10-Aug-2022 10:00:05 Europe/Berlin] PHP Fatal error:  ["HY093",null,null] in E:\balcao-venda-vue-php\public\api\database\DatabaseController.php on line 66
+[10-Aug-2022 10:04:39 Europe/Berlin] PHP Warning:  PDOStatement::execute(): SQLSTATE[HY093]: Invalid parameter number: number of bound variables does not match number of tokens in E:\balcao-venda-vue-php\public\api\database\DatabaseController.php on line 128
+[10-Aug-2022 10:04:39 Europe/Berlin] PHP Fatal error:  ["HY093",null,null] in E:\balcao-venda-vue-php\public\api\database\DatabaseController.php on line 66
+[10-Aug-2022 10:08:56 Europe/Berlin] PHP Warning:  PDOStatement::execute(): SQLSTATE[HY093]: Invalid parameter number: number of bound variables does not match number of tokens in E:\balcao-venda-vue-php\public\api\database\DatabaseController.php on line 128
+[10-Aug-2022 10:08:56 Europe/Berlin] PHP Fatal error:  ["HY093",null,null] in E:\balcao-venda-vue-php\public\api\database\DatabaseController.php on line 66
+[10-Aug-2022 10:09:29 Europe/Berlin] PHP Warning:  PDOStatement::execute(): SQLSTATE[HY093]: Invalid parameter number: number of bound variables does not match number of tokens in E:\balcao-venda-vue-php\public\api\database\DatabaseController.php on line 128
+[10-Aug-2022 10:09:29 Europe/Berlin] PHP Fatal error:  ["HY093",null,null] in E:\balcao-venda-vue-php\public\api\database\DatabaseController.php on line 66
+[10-Aug-2022 10:11:43 Europe/Berlin] PHP Warning:  PDOStatement::execute(): SQLSTATE[HY093]: Invalid parameter number: number of bound variables does not match number of tokens in E:\balcao-venda-vue-php\public\api\database\DatabaseController.php on line 128
+[10-Aug-2022 10:11:43 Europe/Berlin] PHP Fatal error:  ["HY093",null,null] in E:\balcao-venda-vue-php\public\api\database\DatabaseController.php on line 66
+[10-Aug-2022 10:11:57 Europe/Berlin] PHP Warning:  PDOStatement::execute(): SQLSTATE[HY093]: Invalid parameter number: number of bound variables does not match number of tokens in E:\balcao-venda-vue-php\public\api\database\DatabaseController.php on line 128
+[10-Aug-2022 10:11:57 Europe/Berlin] PHP Fatal error:  ["HY093",null,null] in E:\balcao-venda-vue-php\public\api\database\DatabaseController.php on line 66

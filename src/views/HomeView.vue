@@ -1,18 +1,20 @@
 <template>
-  <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
-  </div>
+  <v-container>
+    <list-view :items="items"></list-view>
+  </v-container>
 </template>
 
 <script>
-// @ is an alias to /src
-import HelloWorld from '@/components/HelloWorld.vue'
-
+import ListView from '@/components/ListView';
 export default {
   name: 'HomeView',
-  components: {
-    HelloWorld
-  }
+  components: {ListView},
+  data: () => ({
+    items: [
+      {id: 1, icon: 'liquor', title: 'Produtos', subtitle: 'Cadastro de produtos', to: '/produto/lista'},
+      {id: 2, icon: 'format-list-bulleted', title: 'Vendas', subtitle: 'Histórico de vendas', to: '/vendas'},
+      {id: 3, icon: 'plus', title: 'Registrar Venda', subtitle: 'Cadastrar uma nova venda', to: '/venda'},
+    ],
+  }),
 }
 </script>
