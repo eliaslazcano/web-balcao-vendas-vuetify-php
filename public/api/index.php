@@ -16,9 +16,10 @@ require_once __DIR__ . '/vendor/autoload.php';
 session_start();
 
 #Ativando log local e configurando o PHP
+date_default_timezone_set(\App\Config::TIMEZONE_PHP);
+ini_set('memory_limit',\App\Config::MEMORY_LIMIT);
 ini_set('log_errors', 1);
 ini_set('error_log', __DIR__.'/errors.log');
-ini_set('memory_limit','256M');
 error_reporting(E_ALL);
 
 #Roteando
