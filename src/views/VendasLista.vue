@@ -13,6 +13,15 @@
         sort-desc
       >
         <template v-slot:[`item.criado_em`]="{item}">{{ formatarData(item.criado_em) }}</template>
+        <template v-slot:[`item.cliente`]="{item}">
+          <span v-if="item.cliente">{{ item.cliente }}</span>
+          <span v-else class="grey--text">SEM NOME</span>
+        </template>
+        <template v-slot:[`item.debito`]="{item}">
+          <span v-if="item.credito >= item.debito" class="success--text">R$ {{item.credito.toFixed(2)}}</span>
+          <span v-else-if="item.credito > 0" class="warning--text">R$ {{item.debito.toFixed(2)}} ({{item.credito.toFixed(2)}})</span>
+          <span v-else class="red--text">R$ {{item.debito.toFixed(2)}}</span>
+        </template>
         <template v-slot:[`item.acoes`]="{item}">
           <v-btn color="primary" small icon :to="'/venda/' + item.id">
             <v-icon>mdi-open-in-new</v-icon>
@@ -38,10 +47,11 @@ export default {
   data: () => ({
     loading: true,
     tableHeaders: [
-      {value: 'id', text: 'id'},
-      {value: 'cliente', text: 'cliente'},
-      {value: 'criado_em', text: 'data'},
-      {value: 'acoes', text: 'abrir'},
+      {value: 'id', text: 'Nº', width: '8rem'},
+      {value: 'criado_em', text: 'DATA', width: '12rem'},
+      {value: 'cliente', text: 'CLIENTE'},
+      {value: 'debito', text: 'VALOR'},
+      {value: 'acoes', text: 'ABRIR', width: '6rem'},
     ],
     tableItems: [],
     tableSearch: '',

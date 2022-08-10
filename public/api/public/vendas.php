@@ -3,10 +3,6 @@
 use App\Helper\HttpHelper;
 use App\Database\DbApp;
 
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
 HttpHelper::validarMetodos(['GET','POST']);
 $db = new DbApp();
 
@@ -17,13 +13,15 @@ if (HttpHelper::isGet()) {
     if (!$x)HttpHelper::erroJson(400, 'Venda não encontrada');
     $x['itens'] = $db->query('SELECT v.id, v.produto, p.nome AS produto_nome, v.quantidade, v.valor FROM venda_itens v INNER JOIN produtos p on v.produto = p.id WHERE v.venda = :id', [':id' => $id], ['id','produto','quantidade','valor']);
   }
-  else $x = $db->query('SELECT id, cliente, criado_em FROM vendas', [], ['id']);
+  else $x = $db->query('SELECT v.id, v.cliente, v.criado_em, SUM(vi.valor) AS debito, v.credito FROM vendas v LEFT JOIN venda_itens vi ON v.id = vi.venda GROUP BY v.id', [], ['id','debito','credito']);
   HttpHelper::emitirJson($x);
 } elseif (HttpHelper::isPost()) {
   $id = HttpHelper::obterParametro('id');
   $cliente = HttpHelper::validarParametro('cliente');
   $credito = HttpHelper::validarParametro('credito');
   $itens = HttpHelper::validarParametro('itens'); //Array
+
+  if (empty($itens)) HttpHelper::erroJson(400, 'A venda está sem nenhum produto');
 
   if (!$id) $id = $db->insert('INSERT INTO vendas (cliente, credito) VALUES (UPPER(:cliente), :credito)', [':cliente' => $cliente, ':credito' => $credito ?: 0]);
   else $db->update('UPDATE vendas SET cliente = UPPER(:cliente), credito = :credito WHERE id = :id', [':cliente' => $cliente, ':credito' => $credito ?: 0, ':id' => $id]);
