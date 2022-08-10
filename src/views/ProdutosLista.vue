@@ -59,7 +59,8 @@ export default {
     tableHeaders: [
       {value: 'nome', text: 'NOME'},
       {value: 'valor', text: 'VALOR UN.'},
-      {value: 'acoes', text: 'AÇÕES', width: '6rem'},
+      {value: 'codigo', text: 'CODIGO'},
+      {value: 'acoes', text: 'AÇÕES', width: '6rem', sortable: false},
     ],
     tableItems: [],
     tableSearch: '',

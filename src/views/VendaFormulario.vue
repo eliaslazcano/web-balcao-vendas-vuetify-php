@@ -19,11 +19,12 @@
           item-text="nome"
           no-data-text="Nenhum produto corresponde"
           :disabled="enviandoVenda"
+          :filter="iptProdutoFiltro"
           auto-select-first
         >
           <template v-slot:item="{item}">
             <v-list-item-content>
-              <v-list-item-title>{{item.nome}}</v-list-item-title>
+              <v-list-item-title>{{item.nome}} <span v-if="item.codigo" class="grey--text"> - Cod. {{item.codigo}}</span></v-list-item-title>
               <v-list-item-subtitle>R$ {{item.valor.toFixed(2)}}</v-list-item-subtitle>
             </v-list-item-content>
           </template>
@@ -33,6 +34,8 @@
         :headers="tableHeaders"
         :items="tableItems"
         :search="tableSearch"
+        disable-pagination
+        hide-default-footer
         no-data-text="Nenhum produto adicionado"
         sort-by="produto_nome"
       >
@@ -148,6 +151,10 @@ export default {
       } finally {
         this.enviandoVenda = false;
       }
+    },
+    iptProdutoFiltro(item, queryText, itemText) {
+      if (item.codigo && item.codigo === queryText) return true;
+      return itemText.toLocaleLowerCase().indexOf(queryText.toLocaleLowerCase()) > -1
     },
   },
   created() {

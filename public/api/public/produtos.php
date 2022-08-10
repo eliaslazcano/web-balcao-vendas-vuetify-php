@@ -7,7 +7,7 @@ HttpHelper::validarMetodos(['GET','POST','DELETE']);
 $db = new DbApp();
 
 if (HttpHelper::isGet()) {
-  $x = $db->query('SELECT id, nome, codigo, valor, criado_em FROM produtos WHERE deletado_em IS NULL', [], ['id','valor']);
+  $x = $db->query('SELECT id, nome, codigo, valor, criado_em FROM produtos WHERE deletado_em IS NULL ORDER BY nome', [], ['id','valor']);
   HttpHelper::emitirJson($x);
 } elseif (HttpHelper::isPost()) {
   $id = HttpHelper::obterParametro('id');

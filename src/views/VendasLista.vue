@@ -51,7 +51,7 @@ export default {
       {value: 'criado_em', text: 'DATA', width: '12rem'},
       {value: 'cliente', text: 'CLIENTE'},
       {value: 'debito', text: 'VALOR'},
-      {value: 'acoes', text: 'ABRIR', width: '6rem'},
+      {value: 'acoes', text: 'ABRIR', width: '6rem', sortable: false},
     ],
     tableItems: [],
     tableSearch: '',
