@@ -48,6 +48,24 @@
               <v-list-item-title>Vendas</v-list-item-title>
             </v-list-item-content>
           </v-list-item>
+          <v-list-group>
+            <template v-slot:activator>
+              <v-list-item-icon>
+                <v-icon>mdi-file-document-multiple</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>Relatórios</v-list-item-title>
+              </v-list-item-content>
+            </template>
+            <v-list-item to="/relatorio/produtos_vendidos">
+              <v-list-item-content>
+                <v-list-item-title>Produtos Vendidos</v-list-item-title>
+              </v-list-item-content>
+              <v-list-item-icon>
+                <v-icon>mdi-shopping</v-icon>
+              </v-list-item-icon>
+            </v-list-item>
+          </v-list-group>
         </v-list-item-group>
       </v-list>
     </v-navigation-drawer>

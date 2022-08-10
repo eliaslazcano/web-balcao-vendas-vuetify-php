@@ -27,6 +27,11 @@ const routes = [
     component: () => import('../views/VendaFormulario.vue')
   },
   {
+    path: '/relatorio/produtos_vendidos',
+    name: 'produtos-vendidos',
+    component: () => import('../views/relatorios/ProdutosVendidos.vue')
+  },
+  {
     path: '/suporte',
     name: 'suporte',
     component: () => import('../views/SuporteContato.vue')
