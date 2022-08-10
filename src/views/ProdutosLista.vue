@@ -9,11 +9,15 @@
         :headers="tableHeaders"
         :items="tableItems"
         :search="tableSearch"
+        sort-by="nome"
       >
         <template v-slot:[`item.valor`]="{item}">R$ {{ item.valor ? item.valor.toFixed(2) : '0.00' }}</template>
         <template v-slot:[`item.acoes`]="{item}">
           <v-btn color="yellow darken-4" small icon @click="editarProduto(item)">
             <v-icon>mdi-pencil</v-icon>
+          </v-btn>
+          <v-btn color="red" small icon @click="deletarProduto(item)" :disabled="deletandoProduto">
+            <v-icon>mdi-delete</v-icon>
           </v-btn>
         </template>
       </v-data-table>
@@ -25,12 +29,12 @@
     </v-card>
     <v-dialog v-model="dialogEditarProduto" width="32rem">
       <v-card>
-        <v-form @submit.prevent="salvarProduto" :disabled="salvandoProduto">
+        <v-form ref="form-produto" @submit.prevent="salvarProduto" :disabled="salvandoProduto">
           <v-card-title>Editar produto</v-card-title>
           <v-card-text>
-            <v-text-field label="Nome" v-model="iptNome" outlined dense></v-text-field>
+            <v-text-field label="Nome" v-model="iptNome" outlined dense :rules="[v => (!!v && !!v.trim()) || 'Coloque o nome']"></v-text-field>
             <v-text-field label="Codigo" v-model="iptCodigo" outlined dense></v-text-field>
-            <v-text-field label="Valor" v-model="iptValor" outlined dense></v-text-field>
+            <v-text-field label="Valor" v-model="iptValor" outlined dense type="tel"></v-text-field>
           </v-card-text>
           <v-card-actions class="justify-center">
             <v-btn color="secondary" small depressed :disabled="salvandoProduto" @click="dialogEditarProduto = false">
@@ -53,10 +57,9 @@ export default {
   data: () => ({
     loading: true,
     tableHeaders: [
-      {value: 'id', text: 'ID'},
       {value: 'nome', text: 'NOME'},
       {value: 'valor', text: 'VALOR UN.'},
-      {value: 'acoes', text: 'AÇÕES'},
+      {value: 'acoes', text: 'AÇÕES', width: '6rem'},
     ],
     tableItems: [],
     tableSearch: '',
@@ -66,6 +69,7 @@ export default {
     iptValor: '',
     dialogEditarProduto: false,
     salvandoProduto: false,
+    deletandoProduto: false,
   }),
   methods: {
     async loadData() {
@@ -89,6 +93,7 @@ export default {
       this.dialogEditarProduto = true;
     },
     async salvarProduto() {
+      if (!this.$refs['form-produto'].validate()) return;
       try {
         this.salvandoProduto = true;
         const produto = {id: this.iptId, codigo: this.iptCodigo, nome: this.iptNome, valor: this.iptValor};
@@ -98,6 +103,17 @@ export default {
         this.dialogEditarProduto = false;
       } finally {
         this.salvandoProduto = false;
+      }
+    },
+    async deletarProduto(item) {
+      if (!confirm(`Tem certeza que vai apagar '${item.nome}'?`)) return;
+      try {
+        this.deletandoProduto = true;
+        const webclient = http();
+        await webclient.delete('produtos?id=' + item.id);
+        await this.loadData();
+      } finally {
+        this.deletandoProduto = false;
       }
     }
   },
