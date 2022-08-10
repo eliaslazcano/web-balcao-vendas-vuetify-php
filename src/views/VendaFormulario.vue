@@ -1,7 +1,7 @@
 <template>
   <async-container :loading="loading">
     <v-card>
-      <v-card-title>Registrar Venda</v-card-title>
+      <v-card-title>{{ id ? 'Venda Nº' + id : 'Registrar Venda' }}</v-card-title>
       <v-card-text>
         <v-row dense>
           <v-col cols="12" md="6">
@@ -134,6 +134,10 @@ export default {
           this.iptCliente = data.cliente;
           this.iptCredito = data.credito;
           this.tableItems = data.itens;
+        } else {
+          this.iptCliente = '';
+          this.iptCredito = '0';
+          this.tableItems = [];
         }
         this.iptProdutoItems = data;
       } catch (e) {
@@ -176,8 +180,8 @@ export default {
         this.$nextTick(() => this.iptProduto = null);
       }
     },
-    id(v) {
-      if (v) this.loadData();
+    id() {
+      this.loadData();
     },
   }
 }
