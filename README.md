@@ -1,11 +1,10 @@
-# balcao-venda-vue-php
-
-Sistema de Venda em balcão para conveniências e bares
+# Web Balcão De Vendas
+Sistema para cadastrar produtos e registrar a venda deles.
 
 ## Tecnologias
-FrontEnd com utilização de Vue 2 e Vuetify.
-Backend com utilização de PHP 7 para servir API's JSON.
-Banco de dados em MySQL.
+- FrontEnd com utilização de framework **VueJs 2** e biblioteca **Vuetify 2**.
+- BackEnd em linguagem **PHP 7** com a extensão PDO, servindo API's JSON sem depender de frameworks de terceiros.
+- Banco de dados do tipo relacional feito com o **MySQL**.
 
 ## Instalação de dependências do JavaScript
 ```
