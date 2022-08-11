@@ -43,7 +43,15 @@
               <v-list-item-title>Inicio</v-list-item-title>
             </v-list-item-content>
           </v-list-item>
-          <v-list-item to="/produto/lista">
+          <v-list-item to="/clientes">
+            <v-list-item-icon>
+              <v-icon>mdi-account-multiple</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>Clientes</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+          <v-list-item to="/produtos">
             <v-list-item-icon>
               <v-icon>mdi-liquor</v-icon>
             </v-list-item-icon>

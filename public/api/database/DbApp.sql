@@ -1,3 +1,12 @@
+create table clientes
+(
+    id int auto_increment
+        primary key,
+    nome varchar(128) null,
+    criado_em datetime default current_timestamp() not null,
+    deletado_em datetime null
+);
+
 create table produtos
 (
     id int auto_increment

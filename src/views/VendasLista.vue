@@ -5,13 +5,7 @@
       <v-card-text>
         <v-text-field label="Pesquisar" prepend-inner-icon="mdi-magnify" v-model="tableSearch" hide-details></v-text-field>
       </v-card-text>
-      <v-data-table
-        :headers="tableHeaders"
-        :items="tableItems"
-        :search="tableSearch"
-        sort-by="id"
-        sort-desc
-      >
+      <v-data-table :headers="tableHeaders" :items="tableItems" :search="tableSearch" sort-by="id" sort-desc>
         <template v-slot:[`item.criado_em`]="{item}">{{ formatarData(item.criado_em) }}</template>
         <template v-slot:[`item.cliente`]="{item}">
           <span v-if="item.cliente">{{ item.cliente }}</span>
@@ -28,12 +22,10 @@
           </v-btn>
         </template>
       </v-data-table>
-      <v-card-actions class="justify-center">
-        <v-btn color="primary" small depressed to="/venda">
-          <v-icon>mdi-plus</v-icon> Registrar venda
-        </v-btn>
-      </v-card-actions>
     </v-card>
+    <v-btn color="success" fab fixed right bottom to="/venda">
+      <v-icon>mdi-plus</v-icon>
+    </v-btn>
   </async-container>
 </template>
 

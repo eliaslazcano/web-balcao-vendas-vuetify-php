@@ -30,7 +30,7 @@ export default {
   props: {
     loading: {type: Boolean, default: false},
     color: {type: String, default: 'blue'},
-    transition: {type: String, default: 'scroll-x-transition'},
+    transition: {type: String, default: 'fade-transition'},
     spinnerTransition: {type: String, default: 'fade-transition'},
     fluid: {type: Boolean, default: false},
     appear: {type: Boolean, default: true},

@@ -5,12 +5,7 @@
       <v-card-text>
         <v-text-field label="Pesquisar" prepend-inner-icon="mdi-magnify" v-model="tableSearch" hide-details></v-text-field>
       </v-card-text>
-      <v-data-table
-        :headers="tableHeaders"
-        :items="tableItems"
-        :search="tableSearch"
-        sort-by="nome"
-      >
+      <v-data-table :headers="tableHeaders" :items="tableItems" :search="tableSearch" sort-by="nome">
         <template v-slot:[`item.valor`]="{item}">R$ {{ item.valor ? item.valor.toFixed(2) : '0.00' }}</template>
         <template v-slot:[`item.acoes`]="{item}">
           <v-btn color="yellow darken-4" small icon @click="editarProduto(item)">
@@ -21,16 +16,16 @@
           </v-btn>
         </template>
       </v-data-table>
-      <v-card-actions class="justify-center">
-        <v-btn color="primary" small depressed @click="criarProduto">
-          <v-icon>mdi-plus</v-icon> Cadastrar produto
-        </v-btn>
-      </v-card-actions>
     </v-card>
+    <v-fab-transition>
+      <v-btn color="success" fab fixed right bottom @click="criarProduto" v-if="!dialogEditarProduto">
+        <v-icon>mdi-plus</v-icon>
+      </v-btn>
+    </v-fab-transition>
     <v-dialog v-model="dialogEditarProduto" width="32rem">
       <v-card>
         <v-form ref="form-produto" @submit.prevent="salvarProduto" :disabled="salvandoProduto">
-          <v-card-title>Editar produto</v-card-title>
+          <v-card-title>{{ iptId ? 'Editar' : 'Criar' }} produto</v-card-title>
           <v-card-text>
             <v-text-field label="Nome" v-model="iptNome" outlined dense :rules="[v => (!!v && !!v.trim()) || 'Coloque o nome']"></v-text-field>
             <v-text-field label="Codigo" v-model="iptCodigo" outlined dense></v-text-field>
@@ -84,6 +79,7 @@ export default {
       this.iptCodigo = '';
       this.iptNome = '';
       this.iptValor = '';
+      if (this.$refs['form-produto']) this.$refs['form-produto'].resetValidation();
       this.dialogEditarProduto = true;
     },
     editarProduto(item) {

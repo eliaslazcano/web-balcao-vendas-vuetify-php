@@ -11,8 +11,13 @@ const routes = [
     component: HomeView
   },
   {
-    path: '/produto/lista',
-    name: 'produto-lista',
+    path: '/clientes',
+    name: 'clientes',
+    component: () => import('../views/ClientesLista.vue')
+  },
+  {
+    path: '/produtos',
+    name: 'produtos',
     component: () => import('../views/ProdutosLista.vue')
   },
   {
@@ -28,7 +33,7 @@ const routes = [
   },
   {
     path: '/relatorio/produtos_vendidos',
-    name: 'produtos-vendidos',
+    name: 'relatorio-produtos',
     component: () => import('../views/relatorios/ProdutosVendidos.vue')
   },
   {
