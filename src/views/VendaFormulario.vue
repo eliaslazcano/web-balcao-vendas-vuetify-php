@@ -1,16 +1,36 @@
 <template>
   <async-container :loading="loading">
-    <v-card>
+    <v-card class="mb-4">
       <v-card-title>{{ id ? 'Venda Nº' + id : 'Registrar Venda' }}</v-card-title>
       <v-card-text>
-        <v-row dense>
-          <v-col cols="12" md="6">
-            <v-text-field label="Cliente" v-model="iptCliente" :disabled="enviandoVenda" placeholder="Nome do cliente" persistent-placeholder></v-text-field>
-          </v-col>
-          <v-col cols="12" md="6">
-            <v-text-field label="Valor Pago" v-model="iptCredito" :disabled="enviandoVenda" type="tel"></v-text-field>
-          </v-col>
-        </v-row>
+        <v-text-field
+          label="Cliente"
+          v-model="iptCliente"
+          :disabled="enviandoVenda"
+          :readonly="!!cadastro || !!iptClienteId"
+          placeholder="Nome do cliente"
+          persistent-placeholder
+          :append-outer-icon="cadastro ? undefined : 'mdi-account-search'"
+          @click:append-outer="dialogPesquisarCadastro = true"
+          @click:clear="desvincularCadastro"
+          :clearable="!cadastro"
+          outlined
+          dense
+        ></v-text-field>
+        <v-text-field
+          label="Valor Pago"
+          v-model="iptCredito"
+          :disabled="enviandoVenda"
+          type="tel"
+          prefix="R$"
+          outlined
+          dense
+        ></v-text-field>
+      </v-card-text>
+    </v-card>
+    <v-card>
+      <v-card-title>Lista de Produtos</v-card-title>
+      <v-card-text class="pb-0">
         <v-autocomplete
           label="Adicionar produto"
           v-model="iptProduto"
@@ -39,11 +59,6 @@
         no-data-text="Nenhum produto adicionado"
         sort-by="produto_nome"
       >
-        <template v-slot:top>
-          <div class="mx-4">
-            <p class="subtitle">Lista de produtos</p>
-          </div>
-        </template>
         <template v-slot:[`item.quantidade`]="{item}">
           <v-edit-dialog :return-value.sync="item.quantidade">
             {{ item.quantidade }}
@@ -85,12 +100,27 @@
           </tfoot>
         </template>
       </v-data-table>
-      <v-card-actions class="justify-center">
-        <v-btn small depressed color="success" :disabled="tableItems.length === 0" :loading="enviandoVenda" @click="salvarVenda">
-          <v-icon dense class="mr-1">mdi-content-save</v-icon> Salvar
-        </v-btn>
-      </v-card-actions>
     </v-card>
+    <div class="text-center my-4">
+      <v-btn small color="success" :disabled="tableItems.length === 0" :loading="enviandoVenda" @click="salvarVenda">
+        <v-icon dense class="mr-1">mdi-content-save</v-icon> Salvar
+      </v-btn>
+    </div>
+    <v-dialog v-model="dialogPesquisarCadastro" width="40rem">
+      <v-card>
+        <v-card-title>Pesquisar Cliente</v-card-title>
+        <v-card-text>
+          <v-text-field label="Pesquisar" prepend-inner-icon="mdi-magnify" v-model="tableCadastrosSearch" hide-details dense outlined></v-text-field>
+        </v-card-text>
+        <v-data-table
+          :headers="tableCadastrosHeaders"
+          :items="tableCadastrosItems"
+          :search="tableCadastrosSearch"
+          dense
+          @click:row="selecionarCadastro"
+        ></v-data-table>
+      </v-card>
+    </v-dialog>
   </async-container>
 </template>
 
@@ -105,6 +135,8 @@ export default {
   components: {AsyncContainer},
   data: () => ({
     loading: true,
+    cadastro: null, //Cadastro vinculado a esta venda
+    iptClienteId: null,
     iptCliente: '',
     iptCredito: '0',
     iptProduto: null,
@@ -112,11 +144,19 @@ export default {
     tableHeaders: [
       {value: 'produto_nome', text: 'PRODUTO'},
       {value: 'quantidade', text: 'QUANTIDADE'},
-      {value: 'valor', text: 'VALOR'},
+      {value: 'valor', text: 'VALOR', width: '10rem'},
     ],
     tableItems: [],
     tableSearch: '',
     enviandoVenda: false,
+    dialogPesquisarCadastro: false,
+    tableCadastrosHeaders: [
+      {value: 'id', text: 'COD.', width: '6rem'},
+      {value: 'nome', text: 'NOME'},
+    ],
+    tableCadastrosItems: [],
+    tableCadastrosSearch: '',
+    tableCadastrosLoading: false,
   }),
   computed: {
     valorTotal() {
@@ -131,6 +171,7 @@ export default {
         const {data} = await webclient.get('produtos');
         if (this.id) {
           const {data} = await webclient.get(`vendas?id=${this.id}`);
+          this.cadastro = data.cadastro;
           this.iptCliente = data.cliente;
           this.iptCredito = data.credito;
           this.tableItems = data.itens;
@@ -146,11 +187,25 @@ export default {
         this.loading = false;
       }
     },
+    async loadCadastros() {
+      this.tableCadastrosLoading = true;
+      const webclient = http();
+      const {data} = await webclient.get('clientes');
+      this.tableCadastrosItems = data;
+      this.tableCadastrosLoading = false;
+    },
     async salvarVenda() {
       try {
         this.enviandoVenda = true;
         const webclient = http();
-        await webclient.post('vendas', {id: this.id, cliente: this.iptCliente, credito: this.iptCredito, itens: this.tableItems});
+        const payload = {
+          id: this.id,
+          cliente: this.iptCliente,
+          cadastro: this.cadastro ? this.cadastro : this.iptClienteId,
+          credito: this.iptCredito,
+          itens: this.tableItems
+        };
+        await webclient.post('vendas', payload);
         await this.$router.push('/vendas');
       } finally {
         this.enviandoVenda = false;
@@ -159,6 +214,15 @@ export default {
     iptProdutoFiltro(item, queryText, itemText) {
       if (item.codigo && item.codigo === queryText) return true;
       return itemText.toLocaleLowerCase().indexOf(queryText.toLocaleLowerCase()) > -1
+    },
+    selecionarCadastro(item) {
+      this.iptClienteId = item.id;
+      this.iptCliente = item.nome;
+      this.dialogPesquisarCadastro = false;
+    },
+    desvincularCadastro() {
+      this.iptClienteId = null;
+      this.iptCliente = '';
     },
   },
   created() {
@@ -183,6 +247,9 @@ export default {
     id() {
       this.loadData();
     },
+    dialogPesquisarCadastro(v) {
+      if (v && this.tableCadastrosItems.length === 0) this.loadCadastros();
+    }
   }
 }
 </script>

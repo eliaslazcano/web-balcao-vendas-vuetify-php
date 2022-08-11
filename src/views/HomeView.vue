@@ -11,9 +11,9 @@ export default {
   components: {ListView},
   data: () => ({
     items: [
-      {id: 1, icon: 'liquor', title: 'Produtos', subtitle: 'Cadastro de produtos', to: '/produtos'},
-      {id: 2, icon: 'format-list-bulleted', title: 'Vendas', subtitle: 'Histórico de vendas', to: '/vendas'},
-      {id: 3, icon: 'cart-plus', title: 'Registrar Venda', subtitle: 'Cadastrar uma nova venda', to: '/venda'},
+      {id: 1, icon: 'account-multiple', title: 'Clientes', subtitle: 'Cadastro de clientes', to: '/clientes'},
+      {id: 2, icon: 'liquor', title: 'Produtos', subtitle: 'Cadastro de produtos', to: '/produtos'},
+      {id: 3, icon: 'format-list-bulleted', title: 'Vendas', subtitle: 'Histórico de vendas', to: '/vendas'},
     ],
   }),
 }

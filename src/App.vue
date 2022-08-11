@@ -3,9 +3,9 @@
     <v-app-bar app clipped-left dense dark :color="$vuetify.theme.dark ? 'secondary' : 'primary'">
       <v-app-bar-nav-icon @click.stop="mostrarMenu = !mostrarMenu" />
       <v-spacer></v-spacer>
-      <v-btn to="/suporte" text>
-        <span class="mr-2">Suporte</span>
-        <v-icon>mdi-open-in-new</v-icon>
+      <v-btn to="/venda" text>
+        <span class="mr-2">Vender</span>
+        <v-icon>mdi-cart-plus</v-icon>
       </v-btn>
       <v-menu left bottom offset-y class="d-print-none">
         <template v-slot:activator="{ on: menu, attrs }">
@@ -26,6 +26,14 @@
             </v-list-item-icon>
             <v-list-item-content>
               <v-list-item-title>Modo escuro</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+          <v-list-item to="/suporte">
+            <v-list-item-icon>
+              <v-icon>mdi-face-agent</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>Suporte</v-list-item-title>
             </v-list-item-content>
           </v-list-item>
         </v-list>
@@ -57,14 +65,6 @@
             </v-list-item-icon>
             <v-list-item-content>
               <v-list-item-title>Produtos</v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
-          <v-list-item to="/venda">
-            <v-list-item-icon>
-              <v-icon>mdi-cart-plus</v-icon>
-            </v-list-item-icon>
-            <v-list-item-content>
-              <v-list-item-title>Registrar venda</v-list-item-title>
             </v-list-item-content>
           </v-list-item>
           <v-list-item to="/vendas">

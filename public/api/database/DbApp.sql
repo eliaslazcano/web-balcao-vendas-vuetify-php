@@ -23,8 +23,12 @@ create table vendas
     id int auto_increment
         primary key,
     cliente varchar(128) null,
+    cadastro int null comment 'vincula a venda a um cliente cadastrado',
     credito decimal(8,2) default 0.00 not null,
-    criado_em datetime default current_timestamp() null
+    criado_em datetime default current_timestamp() null,
+    constraint vendas_clientes_id_fk
+        foreign key (cadastro) references clientes (id)
+            on update cascade on delete set null
 );
 
 create table venda_itens
