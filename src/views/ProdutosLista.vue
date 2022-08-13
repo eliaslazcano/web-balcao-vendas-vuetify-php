@@ -3,7 +3,7 @@
     <v-card>
       <v-card-title>Produtos</v-card-title>
       <v-card-text>
-        <v-text-field label="Pesquisar" prepend-inner-icon="mdi-magnify" v-model="tableSearch" hide-details></v-text-field>
+        <v-text-field label="Pesquisar" prepend-inner-icon="mdi-magnify" v-model="tableSearch" hide-details autofocus></v-text-field>
       </v-card-text>
       <v-data-table :headers="tableHeaders" :items="tableItems" :search="tableSearch" sort-by="nome">
         <template v-slot:[`item.valor`]="{item}">R$ {{ item.valor ? item.valor.toFixed(2) : '0.00' }}</template>

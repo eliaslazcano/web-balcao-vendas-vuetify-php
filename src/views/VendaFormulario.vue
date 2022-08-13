@@ -2,6 +2,7 @@
   <async-container :loading="loading">
     <v-card class="mb-4">
       <v-card-title>{{ id ? 'Venda Nº' + id : 'Registrar Venda' }}</v-card-title>
+      <v-card-subtitle v-if="!!criado_em">Criado em {{ moment(criado_em).format('DD/MM/YYYY HH:mm') }}</v-card-subtitle>
       <v-card-text>
         <v-text-field
           label="Cliente"
@@ -12,8 +13,10 @@
           persistent-placeholder
           :append-outer-icon="cadastro ? undefined : 'mdi-account-search'"
           @click:append-outer="dialogPesquisarCadastro = true"
+          @keydown="(x) => {if (x.code === 'F2' && !cadastro) dialogPesquisarCadastro = true}"
           @click:clear="desvincularCadastro"
           :clearable="!cadastro"
+          autofocus
           outlined
           dense
         ></v-text-field>
@@ -110,12 +113,25 @@
       <v-card>
         <v-card-title>Pesquisar Cliente</v-card-title>
         <v-card-text>
-          <v-text-field label="Pesquisar" prepend-inner-icon="mdi-magnify" v-model="tableCadastrosSearch" hide-details dense outlined></v-text-field>
+          <v-text-field
+            label="Pesquisar"
+            prepend-inner-icon="mdi-magnify"
+            v-model="tableCadastrosSearch"
+            @keydown="(x) => {if (x.code === 'F2') pesquisarCadastroPorDigital()}"
+            hide-details dense outlined autofocus
+          >
+            <template v-slot:append-outer>
+              <v-btn color="primary" small @click="pesquisarCadastroPorDigital">
+                <v-icon>mdi-fingerprint</v-icon>
+              </v-btn>
+            </template>
+          </v-text-field>
         </v-card-text>
         <v-data-table
           :headers="tableCadastrosHeaders"
           :items="tableCadastrosItems"
           :search="tableCadastrosSearch"
+          :loading="tableCadastrosLoading"
           dense
           @click:row="selecionarCadastro"
         ></v-data-table>
@@ -126,7 +142,9 @@
 
 <script>
 import http from '@/plugins/axios';
+import moment from '@/plugins/moment';
 import AsyncContainer from '@/components/AsyncContainer';
+import BiometriaNitgen from '@/http/BiometriaNitgen';
 export default {
   name: 'VendaFormulario',
   props: {
@@ -134,8 +152,10 @@ export default {
   },
   components: {AsyncContainer},
   data: () => ({
+    moment,
     loading: true,
     cadastro: null, //Cadastro vinculado a esta venda
+    criado_em: null,
     iptClienteId: null,
     iptCliente: '',
     iptCredito: '0',
@@ -172,10 +192,13 @@ export default {
         if (this.id) {
           const {data} = await webclient.get(`vendas?id=${this.id}`);
           this.cadastro = data.cadastro;
+          this.criado_em = data.criado_em;
           this.iptCliente = data.cliente;
           this.iptCredito = data.credito;
           this.tableItems = data.itens;
         } else {
+          this.cadastro = null;
+          this.criado_em = null;
           this.iptCliente = '';
           this.iptCredito = '0';
           this.tableItems = [];
@@ -223,6 +246,20 @@ export default {
     desvincularCadastro() {
       this.iptClienteId = null;
       this.iptCliente = '';
+    },
+    async pesquisarCadastroPorDigital() {
+      const biometriaNitgen = new BiometriaNitgen();
+      try {
+        const cadastros = this.tableCadastrosItems.filter(i => !!i.digital).map(i => ({id: i.id, digital: i.digital}));
+        const resultado = await biometriaNitgen.identificar(cadastros);
+        if (resultado === 0) alert('Nenhum cadastro pôde ser encontrado com esta digital escaneada.');
+        else if (resultado > 0) {
+          const cadastro = this.tableCadastrosItems.find(i => i.id === resultado);
+          if (cadastro) this.selecionarCadastro(cadastro);
+        }
+      } catch (e) {
+        alert('Parece que não foi possível coletar a digital');
+      }
     },
   },
   created() {

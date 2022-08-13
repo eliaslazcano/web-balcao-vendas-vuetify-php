@@ -3,7 +3,7 @@
     <v-card>
       <v-card-title>Vendas</v-card-title>
       <v-card-text>
-        <v-text-field label="Pesquisar" prepend-inner-icon="mdi-magnify" v-model="tableSearch" hide-details></v-text-field>
+        <v-text-field label="Pesquisar" prepend-inner-icon="mdi-magnify" v-model="tableSearch" hide-details autofocus></v-text-field>
       </v-card-text>
       <v-data-table :headers="tableHeaders" :items="tableItems" :search="tableSearch" sort-by="id" sort-desc>
         <template v-slot:[`item.criado_em`]="{item}">{{ formatarData(item.criado_em) }}</template>
@@ -13,7 +13,7 @@
         </template>
         <template v-slot:[`item.debito`]="{item}">
           <span v-if="item.credito >= item.debito" class="success--text">R$ {{item.credito.toFixed(2)}}</span>
-          <span v-else-if="item.credito > 0" class="warning--text">R$ {{item.debito.toFixed(2)}} ({{item.credito.toFixed(2)}})</span>
+          <span v-else-if="item.credito > 0" class="warning--text">R$ {{item.credito.toFixed(2)}} / {{item.debito.toFixed(2)}}</span>
           <span v-else class="red--text">R$ {{item.debito.toFixed(2)}}</span>
         </template>
         <template v-slot:[`item.acoes`]="{item}">
