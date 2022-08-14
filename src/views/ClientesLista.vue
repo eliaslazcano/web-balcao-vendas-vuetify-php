@@ -3,7 +3,13 @@
     <v-card>
       <v-card-title>Clientes</v-card-title>
       <v-card-text>
-        <v-text-field label="Pesquisar" prepend-inner-icon="mdi-magnify" v-model="tableSearch" hide-details autofocus>
+        <v-text-field
+          label="Pesquisar"
+          prepend-inner-icon="mdi-magnify"
+          v-model="tableSearch"
+          @keydown="(x) => {if (x.code === 'F2') pesquisarCadastroPorDigital()}"
+          hide-details autofocus
+        >
           <template v-slot:append-outer>
             <v-btn color="primary" small @click="pesquisarCadastroPorDigital">
               <v-icon>mdi-fingerprint</v-icon>
@@ -12,6 +18,7 @@
         </v-text-field>
       </v-card-text>
       <v-data-table :headers="tableHeaders" :items="tableItems" :search="tableSearch" sort-by="nome">
+        <template v-slot:[`item.criado_em`]="{item}">{{ moment(item.criado_em).format('DD/MM/YYYY') }}</template>
         <template v-slot:[`item.acoes`]="{item}">
           <v-btn color="yellow darken-4" small icon @click="editarCadastro(item)">
             <v-icon>mdi-pencil</v-icon>
@@ -31,6 +38,7 @@
       <v-card>
         <v-form ref="form-cadastro" @submit.prevent="salvarCadastro" :disabled="salvandoCadastro">
           <v-card-title>{{ iptId ? 'Editar' : 'Criar' }} cadastro</v-card-title>
+          <v-card-subtitle v-if="!!iptId">Cod. {{ iptId }}</v-card-subtitle>
           <v-card-text>
             <v-text-field
               label="Nome"
@@ -45,6 +53,7 @@
               :success="!!iptDigital"
               placeholder="Não possui"
               persistent-placeholder
+              hide-details
               append-icon="mdi-fingerprint"
               @click:append="coletarDigital"
               readonly
@@ -62,6 +71,7 @@
         </v-form>
       </v-card>
     </v-dialog>
+    <loading-dialog v-model="dialogLoading" :text="dialogLoadingText" width="400"></loading-dialog>
   </async-container>
 </template>
 
@@ -69,13 +79,17 @@
 import AsyncContainer from '@/components/AsyncContainer';
 import http from '@/plugins/axios';
 import BiometriaNitgen from '@/http/BiometriaNitgen';
+import moment from '@/plugins/moment';
+import LoadingDialog from '@/components/LoadingDialog';
 export default {
   name: 'ClientesLista',
-  components: {AsyncContainer},
+  components: {LoadingDialog, AsyncContainer},
   data: () => ({
+    moment,
     loading: true,
     tableHeaders: [
       {value: 'id', text: 'COD.', width: '6rem'},
+      {value: 'criado_em', text: 'DATA CADASTRO', width: '9.2rem'},
       {value: 'nome', text: 'NOME'},
       {value: 'acoes', text: 'AÇÕES', width: '6rem', sortable: false},
     ],
@@ -87,6 +101,8 @@ export default {
     iptId: null,
     iptNome: '',
     iptDigital: '',
+    dialogLoading: false,
+    dialogLoadingText: '',
   }),
   methods: {
     async loadData() {
@@ -133,6 +149,8 @@ export default {
         await webclient.post('clientes', cadastro);
         await this.loadData();
         this.dialogEditarCadastro = false;
+        if (this.iptId) this.$store.commit('showSnackbar', {color: 'success', text: 'Cadastro atualizado'});
+        else this.$store.commit('showSnackbar', {color: 'success', text: 'Cliente registrado'});
       } finally {
         this.salvandoCadastro = false;
       }
@@ -144,6 +162,7 @@ export default {
         const webclient = http();
         await webclient.delete('clientes?id=' + item.id);
         await this.loadData();
+        this.$store.commit('showSnackbar', {color: 'primary', text: 'Cadastro apagado'});
       } finally {
         this.deletandoCadastro = false;
       }
@@ -152,6 +171,8 @@ export default {
       const biometriaNitgen = new BiometriaNitgen();
       try {
         const cadastros = this.tableItems.filter(i => !!i.digital).map(i => ({id: i.id, digital: i.digital}));
+        this.dialogLoading = true;
+        this.dialogLoadingText = 'Enviando todas as biometrias para a memória..';
         const resultado = await biometriaNitgen.identificar(cadastros);
         if (resultado === 0) alert('Nenhum cadastro pôde ser encontrado com esta digital escaneada.');
         else if (resultado > 0) {
@@ -160,6 +181,8 @@ export default {
         }
       } catch (e) {
         alert('Parece que não foi possível coletar a digital');
+      } finally {
+        this.dialogLoading = false;
       }
     },
   },

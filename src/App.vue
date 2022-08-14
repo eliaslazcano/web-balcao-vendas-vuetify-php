@@ -89,7 +89,7 @@
                 <v-list-item-title>Produtos Vendidos</v-list-item-title>
               </v-list-item-content>
               <v-list-item-icon>
-                <v-icon>mdi-shopping</v-icon>
+                <v-icon>mdi-bottle-soda-classic-outline</v-icon>
               </v-list-item-icon>
             </v-list-item>
           </v-list-group>
@@ -100,6 +100,14 @@
     <v-main>
       <router-view/>
     </v-main>
+
+    <v-snackbar
+      app
+      :timeout="3000"
+      :color="$store.state.snackbarColor"
+      :value="$store.state.snackbarShow"
+      @input="$store.commit('hideSnackbar')"
+    >{{$store.state.snackbarText}}</v-snackbar>
   </v-app>
 </template>
 

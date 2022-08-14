@@ -24,7 +24,7 @@ const createWebClient = (errorCallback) => {
   //Error Handle
   const onError = error => {
     if (error.code === 'ECONNABORTED') errorCallback('A conexão foi cancelada pelo dispositivo');
-    else if (error.code === 'ERR_NETWORK') errorCallback(`Não foi possível te conectar com o servidor.<br/>Possíveis causas: <ul><li>Você pode estar sem internet;</li><li>O serviço está em manutenção;</li><li>O serviço está fora do ar;</li></ul>`);
+    else if (error.code === 'ERR_NETWORK') errorCallback(`Não foi possível te conectar com o servidor.\nPossíveis causas:\n- Você pode estar sem internet;\n- O serviço está em manutenção;\n- O serviço está fora do ar;`);
     else if (error.response) {
       //if (error.response.status && error.response.status === 410 && deslogar) store.dispatch('signout');
       if (error.response.data) {

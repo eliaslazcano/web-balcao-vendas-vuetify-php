@@ -223,4 +223,8 @@ export default class StringHelper {
 
     return dataExplodida[2] + separadorNovo + dataExplodida[1] + separadorNovo + dataExplodida[0];
   }
+
+  static monetaryFormat(valor) {
+    return valor ? Number(valor).toLocaleString('pt-BR', {maximumFractionDigits: 2, minimumFractionDigits: 2}) : '0,00';
+  }
 }

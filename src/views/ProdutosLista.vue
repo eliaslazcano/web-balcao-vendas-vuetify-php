@@ -6,7 +6,7 @@
         <v-text-field label="Pesquisar" prepend-inner-icon="mdi-magnify" v-model="tableSearch" hide-details autofocus></v-text-field>
       </v-card-text>
       <v-data-table :headers="tableHeaders" :items="tableItems" :search="tableSearch" sort-by="nome">
-        <template v-slot:[`item.valor`]="{item}">R$ {{ item.valor ? item.valor.toFixed(2) : '0.00' }}</template>
+        <template v-slot:[`item.valor`]="{item}">R$ {{ formatoMonetario(item.valor) }}</template>
         <template v-slot:[`item.acoes`]="{item}">
           <v-btn color="yellow darken-4" small icon @click="editarProduto(item)">
             <v-icon>mdi-pencil</v-icon>
@@ -29,7 +29,7 @@
           <v-card-text>
             <v-text-field label="Nome" v-model="iptNome" outlined dense :rules="[v => (!!v && !!v.trim()) || 'Coloque o nome']"></v-text-field>
             <v-text-field label="Codigo" v-model="iptCodigo" outlined dense></v-text-field>
-            <v-text-field label="Valor" v-model="iptValor" outlined dense type="tel"></v-text-field>
+            <text-field-monetary label="Valor" v-model="iptValor" prefix="R$" outlined dense></text-field-monetary>
           </v-card-text>
           <v-card-actions class="justify-center">
             <v-btn color="secondary" small depressed :disabled="salvandoProduto" @click="dialogEditarProduto = false">
@@ -46,15 +46,17 @@
 <script>
 import AsyncContainer from '@/components/AsyncContainer';
 import http from '@/plugins/axios';
+import TextFieldMonetary from '@/components/TextFieldMonetary';
+import StringHelper from '@/helper/StringHelper';
 export default {
   name: 'ProdutosLista',
-  components: {AsyncContainer},
+  components: {TextFieldMonetary, AsyncContainer},
   data: () => ({
     loading: true,
     tableHeaders: [
       {value: 'nome', text: 'NOME'},
-      {value: 'valor', text: 'VALOR UN.'},
       {value: 'codigo', text: 'CODIGO'},
+      {value: 'valor', text: 'VALOR UN.'},
       {value: 'acoes', text: 'AÇÕES', width: '6rem', sortable: false},
     ],
     tableItems: [],
@@ -68,6 +70,9 @@ export default {
     deletandoProduto: false,
   }),
   methods: {
+    formatoMonetario(valor) {
+      return StringHelper.monetaryFormat(valor);
+    },
     async loadData() {
       const webclient = http();
       const {data} = await webclient.get('produtos');
@@ -98,6 +103,7 @@ export default {
         await webclient.post('produtos', produto);
         await this.loadData();
         this.dialogEditarProduto = false;
+        this.$store.commit('showSnackbar', {color: 'success', text: 'Produto salvo'});
       } finally {
         this.salvandoProduto = false;
       }
@@ -109,6 +115,7 @@ export default {
         const webclient = http();
         await webclient.delete('produtos?id=' + item.id);
         await this.loadData();
+        this.$store.commit('showSnackbar', {color: 'primary', text: 'Produto apagado'});
       } finally {
         this.deletandoProduto = false;
       }

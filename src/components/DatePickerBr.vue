@@ -10,7 +10,18 @@
     min-width="auto"
   >
     <template v-slot:activator="{ on, attrs }">
-      <v-text-field :label="label" :value="dateFormatted" :rules="rules" readonly v-bind="attrs" v-on="on"></v-text-field>
+      <v-text-field
+        :label="label"
+        :value="dateFormatted"
+        :rules="rules"
+        :outlined="outlined"
+        :dense="dense"
+        :hide-details="hideDetails"
+        :prepend-inner-icon="prependInnerIcon ? prependInnerIcon : undefined"
+        readonly
+        v-bind="attrs"
+        v-on="on"
+      ></v-text-field>
     </template>
     <v-date-picker v-model="date" scrollable no-title :max="maxHoje ? hoje : null" @input="noButtons ? save() : undefined">
       <v-spacer></v-spacer>
@@ -22,7 +33,18 @@
   </v-menu>
   <v-dialog v-else ref="dialog" v-model="modal" :return-value.sync="date" persistent width="290px">
     <template v-slot:activator="{ on, attrs }">
-      <v-text-field :label="label" :value="dateFormatted" :rules="rules" readonly v-bind="attrs" v-on="on"></v-text-field>
+      <v-text-field
+        :label="label"
+        :value="dateFormatted"
+        :rules="rules"
+        :outlined="outlined"
+        :dense="dense"
+        :hide-details="hideDetails"
+        :prepend-inner-icon="prependInnerIcon ? prependInnerIcon : undefined"
+        readonly
+        v-bind="attrs"
+        v-on="on"
+      ></v-text-field>
     </template>
     <v-date-picker v-model="date" scrollable :max="maxHoje ? hoje : null" @input="noButtons ? save() : undefined">
       <v-spacer></v-spacer>
@@ -41,6 +63,10 @@ export default {
   props: {
     'inline': {default: false, type: Boolean},
     'noButtons': {default: false, type: Boolean},
+    'outlined': {default: false, type: Boolean},
+    'dense': {default: false, type: Boolean},
+    'hideDetails': {default: false, type: Boolean},
+    'prependInnerIcon': {default: null, type: String},
     'label': {default: '', type: String},
     'value': {default: '', type: String},
     'rules': {default: () => [], type: Array},

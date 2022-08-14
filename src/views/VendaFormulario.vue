@@ -20,7 +20,7 @@
           outlined
           dense
         ></v-text-field>
-        <v-text-field
+        <text-field-monetary
           label="Valor Pago"
           v-model="iptCredito"
           :disabled="enviandoVenda"
@@ -28,7 +28,7 @@
           prefix="R$"
           outlined
           dense
-        ></v-text-field>
+        ></text-field-monetary>
       </v-card-text>
     </v-card>
     <v-card>
@@ -137,6 +137,7 @@
         ></v-data-table>
       </v-card>
     </v-dialog>
+    <loading-dialog v-model="dialogLoading" :text="dialogLoadingText" width="400"></loading-dialog>
   </async-container>
 </template>
 
@@ -145,12 +146,14 @@ import http from '@/plugins/axios';
 import moment from '@/plugins/moment';
 import AsyncContainer from '@/components/AsyncContainer';
 import BiometriaNitgen from '@/http/BiometriaNitgen';
+import TextFieldMonetary from '@/components/TextFieldMonetary';
+import LoadingDialog from '@/components/LoadingDialog';
 export default {
   name: 'VendaFormulario',
   props: {
     id: {type: [String, Number], default: null},
   },
-  components: {AsyncContainer},
+  components: {LoadingDialog, TextFieldMonetary, AsyncContainer},
   data: () => ({
     moment,
     loading: true,
@@ -177,6 +180,8 @@ export default {
     tableCadastrosItems: [],
     tableCadastrosSearch: '',
     tableCadastrosLoading: false,
+    dialogLoading: false,
+    dialogLoadingText: '',
   }),
   computed: {
     valorTotal() {
@@ -229,6 +234,10 @@ export default {
           itens: this.tableItems
         };
         await webclient.post('vendas', payload);
+
+        if (this.id) this.$store.commit('showSnackbar', {color: 'success', text: 'Venda atualizada'});
+        else this.$store.commit('showSnackbar', {color: 'success', text: 'Venda registrada'});
+
         await this.$router.push('/vendas');
       } finally {
         this.enviandoVenda = false;
@@ -251,6 +260,8 @@ export default {
       const biometriaNitgen = new BiometriaNitgen();
       try {
         const cadastros = this.tableCadastrosItems.filter(i => !!i.digital).map(i => ({id: i.id, digital: i.digital}));
+        this.dialogLoading = true;
+        this.dialogLoadingText = 'Enviando todas as biometrias para a memória..';
         const resultado = await biometriaNitgen.identificar(cadastros);
         if (resultado === 0) alert('Nenhum cadastro pôde ser encontrado com esta digital escaneada.');
         else if (resultado > 0) {
@@ -259,6 +270,8 @@ export default {
         }
       } catch (e) {
         alert('Parece que não foi possível coletar a digital');
+      } finally {
+        this.dialogLoading = false;
       }
     },
   },
