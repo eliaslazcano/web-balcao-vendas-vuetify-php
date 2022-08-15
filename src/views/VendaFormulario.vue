@@ -1,6 +1,6 @@
 <template>
   <async-container :loading="loading">
-    <v-card class="mb-4">
+    <v-card width="64rem" class="mx-auto mb-4">
       <v-card-title>{{ id ? 'Venda Nº' + id : 'Registrar Venda' }}</v-card-title>
       <v-card-subtitle v-if="!!criado_em">Criado em {{ moment(criado_em).format('DD/MM/YYYY HH:mm') }}</v-card-subtitle>
       <v-card-text>
@@ -20,6 +20,7 @@
           outlined
           dense
         ></v-text-field>
+        <v-text-field label="Nota" v-model="iptNota" outlined dense placeholder="Observações.."></v-text-field>
         <text-field-monetary
           label="Valor Pago"
           v-model="iptCredito"
@@ -31,7 +32,7 @@
         ></text-field-monetary>
       </v-card-text>
     </v-card>
-    <v-card>
+    <v-card width="64rem" class="mx-auto">
       <v-card-title>Lista de Produtos</v-card-title>
       <v-card-text class="pb-0">
         <v-autocomplete
@@ -41,9 +42,13 @@
           item-value="id"
           item-text="nome"
           no-data-text="Nenhum produto corresponde"
+          prepend-inner-icon="mdi-plus-circle"
           :disabled="enviandoVenda"
           :filter="iptProdutoFiltro"
           auto-select-first
+          hide-details
+          outlined
+          dense
         >
           <template v-slot:item="{item}">
             <v-list-item-content>
@@ -53,6 +58,7 @@
           </template>
         </v-autocomplete>
       </v-card-text>
+      <v-divider class="mt-3"></v-divider>
       <v-data-table
         :headers="tableHeaders"
         :items="tableItems"
@@ -161,6 +167,7 @@ export default {
     criado_em: null,
     iptClienteId: null,
     iptCliente: '',
+    iptNota: '',
     iptCredito: '0',
     iptProduto: null,
     iptProdutoItems: [],
@@ -203,12 +210,14 @@ export default {
           this.cadastro = data.cadastro;
           this.criado_em = data.criado_em;
           this.iptCliente = data.cliente;
+          this.iptNota = data.nota;
           this.iptCredito = data.credito;
           this.tableItems = data.itens;
         } else {
           this.cadastro = null;
           this.criado_em = null;
           this.iptCliente = '';
+          this.iptNota = '';
           this.iptCredito = '0';
           this.tableItems = [];
         }
@@ -235,6 +244,7 @@ export default {
           id: this.id,
           cliente: this.iptCliente,
           cadastro: this.cadastro ? this.cadastro : this.iptClienteId,
+          nota: this.iptNota,
           credito: this.iptCredito,
           itens: this.tableItems
         };

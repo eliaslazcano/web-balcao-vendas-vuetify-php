@@ -1,20 +1,49 @@
 <template>
   <async-container :loading="loading">
-    <v-card>
-      <v-card-title>Vendas</v-card-title>
+    <v-card width="64rem" class="mx-auto">
+      <v-card-title class="justify-space-between">
+        Vendas
+        <v-menu left bottom offset-y class="d-print-none">
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn icon v-bind="attrs" v-on="on">
+              <v-icon>mdi-dots-vertical</v-icon>
+            </v-btn>
+          </template>
+          <v-list class="py-0" dense>
+            <v-list-item @click="iptFiltrarData = !iptFiltrarData">
+              <v-list-item-icon>
+                <v-icon>{{ iptFiltrarData ? 'mdi-calendar-remove' : 'mdi-calendar-check' }}</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>{{ iptFiltrarData ? 'Não filtrar data' : 'Filtrar a data' }}</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+      </v-card-title>
       <v-card-text>
         <v-row>
           <v-col cols="12" md="6">
-            <date-picker-br inline no-buttons outlined dense hide-details v-model="iptDataInicial" label="Data inicial" prepend-inner-icon="mdi-calendar-arrow-right"></date-picker-br>
+            <date-picker-br inline no-buttons outlined dense hide-details v-model="iptDataInicial" label="Data inicial" prepend-inner-icon="mdi-calendar-arrow-right" :disabled="!iptFiltrarData"></date-picker-br>
           </v-col>
           <v-col cols="12" md="6">
-            <date-picker-br inline no-buttons outlined dense hide-details v-model="iptDataFinal" label="Data inicial" prepend-inner-icon="mdi-calendar-arrow-left"></date-picker-br>
+            <date-picker-br inline no-buttons outlined dense hide-details v-model="iptDataFinal" label="Data inicial" prepend-inner-icon="mdi-calendar-arrow-left" :disabled="!iptFiltrarData"></date-picker-br>
           </v-col>
         </v-row>
         <v-text-field label="Pesquisar" class="mt-3" prepend-inner-icon="mdi-magnify" v-model="tableSearch" hide-details autofocus></v-text-field>
       </v-card-text>
-      <v-data-table :headers="tableHeaders" :items="tableItemsFiltered" :search="tableSearch" sort-by="id" sort-desc>
-        <template v-slot:[`item.criado_em`]="{item}">{{ formatarData(item.criado_em) }}</template>
+      <v-data-table
+        :headers="tableHeaders"
+        :items="tableItems"
+        :search="tableSearch"
+        :loading="tableLoading"
+        :footer-props="{'items-per-page-options': [10, 15, 50]}"
+        :items-per-page="15"
+        sort-by="id"
+        sort-desc
+        dense
+      >
+        <template v-slot:[`item.criado_em`]="{item}">{{ moment(item.criado_em).format('DD/MM/YYYY HH:mm') }}</template>
         <template v-slot:[`item.cliente`]="{item}">
           <span v-if="item.cliente">{{ item.cliente }}</span>
           <span v-else class="grey--text">SEM NOME</span>
@@ -47,43 +76,55 @@ export default {
   name: 'VendasLista',
   components: {DatePickerBr, AsyncContainer},
   data: () => ({
+    moment,
     loading: true,
+    tableLoading: true,
     tableHeaders: [
       {value: 'id', text: 'Nº', width: '7rem'},
       {value: 'criado_em', text: 'DATA', width: '12rem'},
       {value: 'cliente', text: 'CLIENTE'},
-      {value: 'debito', text: 'VALOR'},
-      {value: 'acoes', text: 'ABRIR', width: '6rem', sortable: false},
+      {value: 'debito', text: 'VALOR', filterable: false},
+      {value: 'acoes', text: 'ABRIR', width: '6rem', sortable: false, filterable: false},
     ],
     tableItems: [],
     tableSearch: '',
-    iptDataInicial: moment().format('YYYY-MM-01'),
+    iptDataInicial: moment().format('YYYY-01-01'),
     iptDataFinal: moment().format('YYYY-MM-DD'),
+    iptFiltrarData: true,
   }),
   methods: {
     async loadData() {
+      this.tableLoading = true;
       const webclient = http();
-      const {data} = await webclient.get('vendas');
+      const params = {
+        data_inicio: this.iptFiltrarData ? `${this.iptDataInicial} 00:00:00` : null,
+        data_fim: this.iptFiltrarData ? `${this.iptDataFinal} 23:59:59` : null,
+      };
+      const {data} = await webclient.get('vendas', {params});
       this.tableItems = data;
+      this.tableLoading = false;
       this.loading = false;
-    },
-    formatarData(x) {
-      return StringHelper.formatDate(x, '/');
     },
     formatoMonetario(valor) {
       return StringHelper.monetaryFormat(valor);
     },
-  },
-  computed: {
-    tableItemsFiltered() {
-      return this.tableItems.filter(i => i.criado_em.substr(0, 10) >= this.iptDataInicial && i.criado_em.substr(0, 10) <= this.iptDataFinal);
-    }
   },
   async created() {
     try {
       await this.loadData();
     } catch (e) {
       await this.$router.push('/');
+    }
+  },
+  watch: {
+    iptDataInicial(v) {
+      if (v) this.loadData();
+    },
+    iptDataFinal(v) {
+      if (v) this.loadData();
+    },
+    iptFiltrarData() {
+      this.loadData();
     }
   },
 }

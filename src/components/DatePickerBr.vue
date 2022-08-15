@@ -14,6 +14,7 @@
         :label="label"
         :value="dateFormatted"
         :rules="rules"
+        :disabled="disabled"
         :outlined="outlined"
         :dense="dense"
         :hide-details="hideDetails"
@@ -37,6 +38,7 @@
         :label="label"
         :value="dateFormatted"
         :rules="rules"
+        :disabled="disabled"
         :outlined="outlined"
         :dense="dense"
         :hide-details="hideDetails"
@@ -65,6 +67,7 @@ export default {
     'noButtons': {default: false, type: Boolean},
     'outlined': {default: false, type: Boolean},
     'dense': {default: false, type: Boolean},
+    'disabled': {default: false, type: Boolean},
     'hideDetails': {default: false, type: Boolean},
     'prependInnerIcon': {default: null, type: String},
     'label': {default: '', type: String},
