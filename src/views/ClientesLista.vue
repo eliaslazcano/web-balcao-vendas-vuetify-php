@@ -11,7 +11,7 @@
           hide-details autofocus
         >
           <template v-slot:append-outer>
-            <v-btn color="primary" small @click="pesquisarCadastroPorDigital">
+            <v-btn color="primary" small @click="pesquisarCadastroPorDigital" v-if="existeCadastroComDigital && biometriaDisponivel">
               <v-icon>mdi-fingerprint</v-icon>
             </v-btn>
           </template>
@@ -48,6 +48,7 @@
               :rules="[v => (!!v && !!v.trim()) || 'Coloque o nome']"
             ></v-text-field>
             <v-text-field
+              v-if="biometriaDisponivel"
               label="Digital"
               :value="iptDigital ? 'Coletada!' : ''"
               :success="!!iptDigital"
@@ -87,6 +88,7 @@ export default {
   data: () => ({
     moment,
     loading: true,
+    biometriaDisponivel: false,
     tableHeaders: [
       {value: 'id', text: 'COD.', width: '6rem'},
       {value: 'criado_em', text: 'DATA CADASTRO', width: '9.2rem'},
@@ -108,7 +110,8 @@ export default {
     async loadData() {
       const webclient = http();
       const {data} = await webclient.get('clientes');
-      this.tableItems = data;
+      this.tableItems = data.dados;
+      this.biometriaDisponivel = data.biometria_nitgen;
       this.loading = false;
     },
     criarCadastro() {
@@ -168,6 +171,7 @@ export default {
       }
     },
     async pesquisarCadastroPorDigital() {
+      if (!this.existeCadastroComDigital || !this.biometriaDisponivel) return;
       const biometriaNitgen = new BiometriaNitgen();
       try {
         const cadastros = this.tableItems.filter(i => !!i.digital).map(i => ({id: i.id, digital: i.digital}));
@@ -184,6 +188,11 @@ export default {
       } finally {
         this.dialogLoading = false;
       }
+    },
+  },
+  computed: {
+    existeCadastroComDigital() {
+      return this.tableItems.findIndex(i => !!i.digital) !== -1;
     },
   },
   async created() {

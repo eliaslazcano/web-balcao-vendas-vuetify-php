@@ -19,7 +19,7 @@
           </v-tooltip>
         </template>
         <v-list class="py-0" dense>
-          <v-list-item @click="$vuetify.theme.dark = !$vuetify.theme.dark">
+          <v-list-item @click="changeDarkMode">
             <v-list-item-icon>
               <v-icon v-if="$vuetify.theme.dark">mdi-white-balance-sunny</v-icon>
               <v-icon v-else>mdi-weather-night</v-icon>
@@ -118,5 +118,15 @@ export default {
   data: () => ({
     mostrarMenu: null,
   }),
+  methods: {
+    changeDarkMode() {
+      this.$vuetify.theme.dark = !this.$vuetify.theme.dark;
+      localStorage.setItem('darkmode', this.$vuetify.theme.dark ? '1' : '0');
+    }
+  },
+  created() {
+    const darkmode = localStorage.getItem('darkmode');
+    if (darkmode != null) this.$vuetify.theme.dark = darkmode === '1';
+  }
 };
 </script>
