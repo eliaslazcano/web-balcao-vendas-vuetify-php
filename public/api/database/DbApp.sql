@@ -70,6 +70,7 @@ create table configuracoes
 	id int unsigned auto_increment
 		primary key,
 	criado_em datetime default current_timestamp() not null,
+	nome_empresa varchar(100) null,
 	biometria_nitgen tinyint(1) default 0 null comment 'utilizar scan de digital da Nitgen'
 );
 
