@@ -6,7 +6,7 @@
       <v-spacer></v-spacer>
       <v-btn to="/venda" text>
         <span class="mr-2">Vender</span>
-        <v-icon>mdi-cart-plus</v-icon>
+        <v-icon>mdi-cart</v-icon>
       </v-btn>
       <v-menu left bottom offset-y class="d-print-none">
         <template v-slot:activator="{ on: menu, attrs }">
@@ -74,6 +74,14 @@
             </v-list-item-icon>
             <v-list-item-content>
               <v-list-item-title>Vendas</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+          <v-list-item to="/despesas">
+            <v-list-item-icon>
+              <v-icon>mdi-cash-minus</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>Despesas</v-list-item-title>
             </v-list-item-content>
           </v-list-item>
           <v-list-group>

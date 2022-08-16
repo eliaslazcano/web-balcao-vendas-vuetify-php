@@ -48,7 +48,7 @@
         :search="tableSearch"
         :loading="tableLoading"
         :dense="tableDense"
-        :footer-props="{'items-per-page-options': [10, 15, 50]}"
+        :footer-props="{'items-per-page-options': [10, 15, 25]}"
         :items-per-page="15"
         no-data-text="Nenhuma venda encontrada"
         no-results-text="Nenhuma venda encontrada"

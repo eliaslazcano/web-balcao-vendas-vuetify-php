@@ -41,7 +41,7 @@
         :items="tableItems"
         :search="tableSearch"
         :dense="tableDense"
-        :footer-props="{'items-per-page-options': [10, 15, 50]}"
+        :footer-props="{'items-per-page-options': [10, 15, 25]}"
         sort-by="nome"
       >
         <template v-slot:[`item.criado_em`]="{item}">

@@ -32,6 +32,11 @@ const routes = [
     component: () => import('../views/VendaFormulario.vue')
   },
   {
+    path: '/despesas',
+    name: 'despesas',
+    component: () => import('../views/DespesasLista.vue')
+  },
+  {
     path: '/relatorio/produtos_vendidos',
     name: 'relatorio-produtos',
     component: () => import('../views/relatorios/ProdutosVendidos.vue')

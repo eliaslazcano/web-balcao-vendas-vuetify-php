@@ -95,6 +95,9 @@
             </template>
           </v-edit-dialog>
         </template>
+        <template v-slot:[`item.acoes`]="{item}">
+          <v-icon color="red" @click="removerItem(item)">mdi-close-circle</v-icon>
+        </template>
         <template v-slot:foot>
           <tfoot>
           <tr>
@@ -105,6 +108,7 @@
             <td>
               <p class="subtitle-2 primary--text mb-0">R$ {{ valorTotal.toFixed(2) }}</p>
             </td>
+            <td></td>
           </tr>
           </tfoot>
         </template>
@@ -178,6 +182,7 @@ export default {
       {value: 'produto_nome', text: 'PRODUTO'},
       {value: 'quantidade', text: 'QUANTIDADE'},
       {value: 'valor', text: 'VALOR', width: '10rem'},
+      {value: 'acoes', text: 'REMOVER', sortable: false, filterable: false, align: 'center'},
     ],
     tableItems: [],
     tableSearch: '',
@@ -193,6 +198,7 @@ export default {
     tableCadastrosLoading: false,
     dialogLoading: false,
     dialogLoadingText: '',
+    itemsRemover: [],
   }),
   computed: {
     valorTotal() {
@@ -249,7 +255,8 @@ export default {
           cadastro: this.cadastro ? this.cadastro : this.iptClienteId,
           nota: this.iptNota,
           credito: this.iptCredito,
-          itens: this.tableItems
+          itens: this.tableItems,
+          remover: this.itemsRemover
         };
         await webclient.post('vendas', payload);
 
@@ -292,6 +299,18 @@ export default {
       } finally {
         this.dialogLoading = false;
       }
+    },
+    async removerItem(item) {
+      if (!confirm(`Remover "${item.produto_nome}"?`)) return;
+      if (item.id) {
+        const index = this.tableItems.findIndex(i => i.id === item.id);
+        this.tableItems.splice(index, 1);
+        this.itemsRemover.push(item.id);
+      } else {
+        const index = this.tableItems.findIndex(i => i.produto === item.produto);
+        this.tableItems.splice(index, 1);
+      }
+      console.log(item);
     },
   },
   created() {

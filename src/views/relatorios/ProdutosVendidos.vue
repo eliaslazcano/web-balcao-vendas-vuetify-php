@@ -41,7 +41,7 @@
         sort-by="quantidade"
         sort-desc
         no-data-text="Nenhum produto vendido"
-        :footer-props="{'items-per-page-options': [10, 15, 50]}"
+        :footer-props="{'items-per-page-options': [10, 15, 25]}"
       >
         <template v-slot:[`item.valor`]="{item}">R$ {{ item.valor ? formatoMonetario(item.valor) : '0,00' }}</template>
       </v-data-table>

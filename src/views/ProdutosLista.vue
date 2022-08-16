@@ -29,7 +29,7 @@
         :items="tableItems"
         :search="tableSearch"
         :dense="tableDense"
-        :footer-props="{'items-per-page-options': [10, 15, 50]}"
+        :footer-props="{'items-per-page-options': [10, 15, 25]}"
         no-data-text="Nenhum produto encontrado"
         no-results-text="Nenhum produto encontrado"
         sort-by="nome"
@@ -85,7 +85,7 @@ export default {
       {value: 'nome', text: 'NOME'},
       {value: 'codigo', text: 'CODIGO'},
       {value: 'valor', text: 'VALOR UN.'},
-      {value: 'acoes', text: 'AÇÕES', width: '6rem', sortable: false},
+      {value: 'acoes', text: 'AÇÕES', width: '6rem', sortable: false, filterable: false},
     ],
     tableItems: [],
     tableSearch: '',
