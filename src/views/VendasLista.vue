@@ -15,7 +15,7 @@
                 <v-icon>{{ iptFiltrarData ? 'mdi-calendar-remove' : 'mdi-calendar-check' }}</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title>{{ iptFiltrarData ? 'Não filtrar data' : 'Filtrar a data' }}</v-list-item-title>
+                <v-list-item-title>{{ iptFiltrarData ? 'Não filtrar a data' : 'Filtrar a data' }}</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list>
@@ -39,6 +39,8 @@
         :loading="tableLoading"
         :footer-props="{'items-per-page-options': [10, 15, 50]}"
         :items-per-page="15"
+        no-data-text="Nenhuma venda encontrada"
+        no-results-text="Nenhuma venda encontrada"
         sort-by="id"
         sort-desc
         dense

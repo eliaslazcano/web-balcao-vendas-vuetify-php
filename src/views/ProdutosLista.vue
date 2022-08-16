@@ -1,11 +1,19 @@
 <template>
   <async-container :loading="loading">
-    <v-card>
+    <v-card width="64rem" class="mx-auto">
       <v-card-title>Produtos</v-card-title>
       <v-card-text>
         <v-text-field label="Pesquisar" prepend-inner-icon="mdi-magnify" v-model="tableSearch" hide-details autofocus></v-text-field>
       </v-card-text>
-      <v-data-table :headers="tableHeaders" :items="tableItems" :search="tableSearch" sort-by="nome">
+      <v-data-table
+        :headers="tableHeaders"
+        :items="tableItems"
+        :search="tableSearch"
+        :footer-props="{'items-per-page-options': [10, 15, 50]}"
+        no-data-text="Nenhum produto encontrado"
+        no-results-text="Nenhum produto encontrado"
+        sort-by="nome"
+      >
         <template v-slot:[`item.valor`]="{item}">R$ {{ formatoMonetario(item.valor) }}</template>
         <template v-slot:[`item.acoes`]="{item}">
           <v-btn color="yellow darken-4" small icon @click="editarProduto(item)">

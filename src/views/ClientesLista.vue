@@ -113,7 +113,7 @@
       </v-card>
     </v-dialog>
     <loading-dialog v-model="dialogLoading" :text="dialogLoadingText" width="400"></loading-dialog>
-    <v-dialog v-model="dialogEnderecos" width="64rem">
+    <v-dialog v-model="dialogEnderecos" width="72rem">
       <v-card>
         <v-card-title>Endereços</v-card-title>
         <v-data-table
@@ -387,7 +387,7 @@ export default {
     },
     async cadastrarEmail() {
       const email = prompt('Digite o endereço de e-mail');
-      if (!email) return;
+      if (!email || email.trim().length === 0) return;
       const webclient = http();
       await webclient.post('clientes/emails', {cadastro: this.iptId, email: email.trim().toLowerCase()})
         .then(async () => {

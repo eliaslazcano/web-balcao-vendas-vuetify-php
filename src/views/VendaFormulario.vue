@@ -41,7 +41,7 @@
           :items="iptProdutoItems"
           item-value="id"
           item-text="nome"
-          no-data-text="Nenhum produto corresponde"
+          no-data-text="Nenhum produto correspondente"
           prepend-inner-icon="mdi-plus-circle"
           :disabled="enviandoVenda"
           :filter="iptProdutoFiltro"
@@ -138,6 +138,9 @@
           :items="tableCadastrosItems"
           :search="tableCadastrosSearch"
           :loading="tableCadastrosLoading"
+          :footer-props="{'items-per-page-options': [5, 10, 15]}"
+          sort-by="id"
+          sort-desc
           dense
           @click:row="selecionarCadastro"
         ></v-data-table>

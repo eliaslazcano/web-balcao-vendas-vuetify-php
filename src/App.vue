@@ -2,6 +2,7 @@
   <v-app>
     <v-app-bar app clipped-left dense dark :color="$vuetify.theme.dark ? 'secondary' : 'primary'">
       <v-app-bar-nav-icon @click.stop="mostrarMenu = !mostrarMenu" />
+      <v-toolbar-title v-if="nome_empresa">{{ nome_empresa }}</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-btn to="/venda" text>
         <span class="mr-2">Vender</span>
@@ -112,21 +113,33 @@
 </template>
 
 <script>
-
+import http from '@/plugins/axios';
 export default {
   name: 'App',
   data: () => ({
     mostrarMenu: null,
+    nome_empresa: null,
   }),
   methods: {
     changeDarkMode() {
       this.$vuetify.theme.dark = !this.$vuetify.theme.dark;
       localStorage.setItem('darkmode', this.$vuetify.theme.dark ? '1' : '0');
-    }
+    },
+    async carregarConfiguracoesGlobais() {
+      const webclient = http();
+      try {
+        const {data} = await webclient.get('configuracoes');
+        if (data && data.nome_empresa) this.nome_empresa = data.nome_empresa;
+      } catch (e) {
+        //
+      }
+    },
   },
   created() {
     const darkmode = localStorage.getItem('darkmode');
     if (darkmode != null) this.$vuetify.theme.dark = darkmode === '1';
-  }
+
+    this.carregarConfiguracoesGlobais();
+  },
 };
 </script>

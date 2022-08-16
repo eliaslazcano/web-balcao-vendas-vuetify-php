@@ -1,6 +1,6 @@
 <template>
   <async-container :loading="loading">
-    <v-card>
+    <v-card width="64rem" class="mx-auto">
       <v-card-title>Produtos Vendidos</v-card-title>
       <v-card-text>
         <v-row dense>
@@ -21,8 +21,9 @@
         sort-by="quantidade"
         sort-desc
         no-data-text="Nenhum produto vendido"
+        :footer-props="{'items-per-page-options': [10, 15, 50]}"
       >
-        <template v-slot:[`item.valor`]="{item}">R$ {{ item.valor ? parseFloat(item.valor).toFixed(2) : '0.00' }}</template>
+        <template v-slot:[`item.valor`]="{item}">R$ {{ item.valor ? formatoMonetario(item.valor) : '0,00' }}</template>
       </v-data-table>
     </v-card>
   </async-container>
@@ -33,12 +34,13 @@ import AsyncContainer from '@/components/AsyncContainer';
 import http from '@/plugins/axios';
 import moment from '@/plugins/moment';
 import DatePickerBr from '@/components/DatePickerBr';
+import StringHelper from '@/helper/StringHelper';
 export default {
   name: 'ProdutosVendidos',
   components: {DatePickerBr, AsyncContainer},
   data: () => ({
     loading: true,
-    iptDataInicio: moment().subtract(1, 'months').format('YYYY-MM-DD'),
+    iptDataInicio: moment().format('YYYY-MM-01'),
     iptDataFim: moment().format('YYYY-MM-DD'),
     tableLoading: false,
     tableHeaders: [
@@ -57,6 +59,9 @@ export default {
       const {data} = await webclient.get('relatorios/produtos_vendidos', {params});
       this.tableItems = data;
       this.tableLoading = false;
+    },
+    formatoMonetario(valor) {
+      return StringHelper.monetaryFormat(valor);
     },
   },
   async created() {
