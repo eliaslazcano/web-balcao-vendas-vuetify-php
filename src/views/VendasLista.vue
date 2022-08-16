@@ -10,6 +10,14 @@
             </v-btn>
           </template>
           <v-list class="py-0" dense>
+            <v-list-item @click="tableDense = !tableDense">
+              <v-list-item-icon>
+                <v-icon>{{ tableDense ? 'mdi-arrow-expand-vertical' : 'mdi-arrow-collapse-vertical' }}</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>{{ tableDense ? 'Visualização expandida' : 'Visualização compacta' }}</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
             <v-list-item @click="iptFiltrarData = !iptFiltrarData">
               <v-list-item-icon>
                 <v-icon>{{ iptFiltrarData ? 'mdi-calendar-remove' : 'mdi-calendar-check' }}</v-icon>
@@ -22,14 +30,16 @@
         </v-menu>
       </v-card-title>
       <v-card-text>
-        <v-row>
-          <v-col cols="12" md="6">
-            <date-picker-br inline no-buttons outlined dense hide-details v-model="iptDataInicial" label="Data inicial" prepend-inner-icon="mdi-calendar-arrow-right" :disabled="!iptFiltrarData"></date-picker-br>
-          </v-col>
-          <v-col cols="12" md="6">
-            <date-picker-br inline no-buttons outlined dense hide-details v-model="iptDataFinal" label="Data inicial" prepend-inner-icon="mdi-calendar-arrow-left" :disabled="!iptFiltrarData"></date-picker-br>
-          </v-col>
-        </v-row>
+        <v-slide-y-transition>
+          <v-row v-if="iptFiltrarData">
+            <v-col cols="12" md="6">
+              <date-picker-br inline no-buttons outlined dense hide-details v-model="iptDataInicial" label="Data inicial" prepend-inner-icon="mdi-calendar-arrow-right" :disabled="!iptFiltrarData"></date-picker-br>
+            </v-col>
+            <v-col cols="12" md="6">
+              <date-picker-br inline no-buttons outlined dense hide-details v-model="iptDataFinal" label="Data inicial" prepend-inner-icon="mdi-calendar-arrow-left" :disabled="!iptFiltrarData"></date-picker-br>
+            </v-col>
+          </v-row>
+        </v-slide-y-transition>
         <v-text-field label="Pesquisar" class="mt-3" prepend-inner-icon="mdi-magnify" v-model="tableSearch" hide-details autofocus></v-text-field>
       </v-card-text>
       <v-data-table
@@ -37,13 +47,13 @@
         :items="tableItems"
         :search="tableSearch"
         :loading="tableLoading"
+        :dense="tableDense"
         :footer-props="{'items-per-page-options': [10, 15, 50]}"
         :items-per-page="15"
         no-data-text="Nenhuma venda encontrada"
         no-results-text="Nenhuma venda encontrada"
         sort-by="id"
         sort-desc
-        dense
       >
         <template v-slot:[`item.criado_em`]="{item}">{{ moment(item.criado_em).format('DD/MM/YYYY HH:mm') }}</template>
         <template v-slot:[`item.cliente`]="{item}">
@@ -90,6 +100,7 @@ export default {
     ],
     tableItems: [],
     tableSearch: '',
+    tableDense: true,
     iptDataInicial: moment().format('YYYY-01-01'),
     iptDataFinal: moment().format('YYYY-MM-DD'),
     iptFiltrarData: true,

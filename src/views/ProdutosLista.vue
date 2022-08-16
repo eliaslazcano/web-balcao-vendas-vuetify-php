@@ -1,7 +1,26 @@
 <template>
   <async-container :loading="loading">
     <v-card width="64rem" class="mx-auto">
-      <v-card-title>Produtos</v-card-title>
+      <v-card-title class="justify-space-between">
+        Produtos
+        <v-menu left bottom offset-y class="d-print-none">
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn icon v-bind="attrs" v-on="on">
+              <v-icon>mdi-dots-vertical</v-icon>
+            </v-btn>
+          </template>
+          <v-list class="py-0" dense>
+            <v-list-item @click="tableDense = !tableDense">
+              <v-list-item-icon>
+                <v-icon>{{ tableDense ? 'mdi-arrow-expand-vertical' : 'mdi-arrow-collapse-vertical' }}</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>{{ tableDense ? 'Visualização expandida' : 'Visualização compacta' }}</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+      </v-card-title>
       <v-card-text>
         <v-text-field label="Pesquisar" prepend-inner-icon="mdi-magnify" v-model="tableSearch" hide-details autofocus></v-text-field>
       </v-card-text>
@@ -9,6 +28,7 @@
         :headers="tableHeaders"
         :items="tableItems"
         :search="tableSearch"
+        :dense="tableDense"
         :footer-props="{'items-per-page-options': [10, 15, 50]}"
         no-data-text="Nenhum produto encontrado"
         no-results-text="Nenhum produto encontrado"
@@ -69,6 +89,7 @@ export default {
     ],
     tableItems: [],
     tableSearch: '',
+    tableDense: false,
     iptId: null,
     iptCodigo: '',
     iptNome: '',

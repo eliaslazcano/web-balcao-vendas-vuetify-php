@@ -1,6 +1,8 @@
 <template>
   <v-container>
-    <list-view :items="items"></list-view>
+    <div style="width: 56rem; max-width: 100%" class="mx-auto">
+      <list-view :items="items"></list-view>
+    </div>
   </v-container>
 </template>
 

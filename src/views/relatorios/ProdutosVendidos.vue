@@ -1,7 +1,26 @@
 <template>
   <async-container :loading="loading">
     <v-card width="64rem" class="mx-auto">
-      <v-card-title>Produtos Vendidos</v-card-title>
+      <v-card-title class="justify-space-between">
+        Produtos Vendidos
+        <v-menu left bottom offset-y class="d-print-none">
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn icon v-bind="attrs" v-on="on">
+              <v-icon>mdi-dots-vertical</v-icon>
+            </v-btn>
+          </template>
+          <v-list class="py-0" dense>
+            <v-list-item @click="tableDense = !tableDense">
+              <v-list-item-icon>
+                <v-icon>{{ tableDense ? 'mdi-arrow-expand-vertical' : 'mdi-arrow-collapse-vertical' }}</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>{{ tableDense ? 'Visualização expandida' : 'Visualização compacta' }}</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+      </v-card-title>
       <v-card-text>
         <v-row dense>
           <v-col cols="12" md="6">
@@ -18,6 +37,7 @@
         :items="tableItems"
         :search="tableSearch"
         :loading="tableLoading"
+        :dense="tableDense"
         sort-by="quantidade"
         sort-desc
         no-data-text="Nenhum produto vendido"
@@ -50,6 +70,7 @@ export default {
     ],
     tableItems: [],
     tableSearch: '',
+    tableDense: false,
   }),
   methods: {
     async loadData() {
