@@ -19,7 +19,14 @@ if (HttpHelper::isGet()) {
   $logradouro = HttpHelper::validarParametro('logradouro');
 
   $sql = 'INSERT INTO cliente_enderecos (cliente, cep, uf, bairro, cidade, logradouro) VALUES (:cliente, :cep, :uf, :bairro, :cidade, :logradouro)';
-  $id = $db->insert($sql, [':cliente' => $cadastro, ':cep' => $cep, ':uf' => $uf, ':bairro' => $bairro, ':cidade' => $cidade, ':logradouro' => $logradouro]);
+  $id = $db->insert($sql, [
+    ':cliente' => $cadastro ?: null,
+    ':cep' => $cep ?: null,
+    ':uf' => $uf ?: null,
+    ':bairro' => $bairro ?: null,
+    ':cidade' => $cidade ?: null,
+    ':logradouro' => $logradouro ?: null
+  ]);
   HttpHelper::emitirJson($id ? intval($id) : null);
 } elseif (HttpHelper::isDelete()) {
   $id = HttpHelper::validarParametro('id');

@@ -17,7 +17,13 @@
           </template>
         </v-text-field>
       </v-card-text>
-      <v-data-table :headers="tableHeaders" :items="tableItems" :search="tableSearch" sort-by="nome">
+      <v-data-table
+        :headers="tableHeaders"
+        :items="tableItems"
+        :search="tableSearch"
+        :footer-props="{'items-per-page-options': [10, 15, 50]}"
+        sort-by="nome"
+      >
         <template v-slot:[`item.criado_em`]="{item}">
           <span v-if="item.criado_em">{{ moment(item.criado_em).format('DD/MM/YYYY') }}</span>
           <span v-else class="grey--text">NÃO POSSUI</span>
@@ -113,6 +119,7 @@
         <v-data-table
           :headers="tableEnderecosHeaders"
           :items="tableEnderecosItems"
+          :loading="tableEnderecosLoading"
           no-data-text="Nenhum endereço cadastrado"
           sort-by="criado_em"
           sort-desc
@@ -128,6 +135,12 @@
             </v-btn>
           </template>
         </v-data-table>
+        <v-card-actions class="justify-center">
+          <v-btn color="secondary" small depressed @click="dialogEnderecos = false">Fechar</v-btn>
+          <v-btn color="success" small depressed @click="dialogCadastrarEndereco = true">
+            <v-icon dense class="mr-1">mdi-plus-circle</v-icon> Cadastrar
+          </v-btn>
+        </v-card-actions>
       </v-card>
     </v-dialog>
     <v-dialog v-model="dialogEmails" width="40rem">
@@ -136,6 +149,7 @@
         <v-data-table
           :headers="tableEmailsHeaders"
           :items="tableEmailsItems"
+          :loading="tableEmailsLoading"
           no-data-text="Nenhum e-mail cadastrado"
           sort-by="criado_em"
           sort-desc
@@ -151,6 +165,30 @@
             </v-btn>
           </template>
         </v-data-table>
+        <v-card-actions class="justify-center">
+          <v-btn color="secondary" small depressed @click="dialogEmails = false">Fechar</v-btn>
+          <v-btn color="success" small depressed @click="cadastrarEmail">
+            <v-icon dense class="mr-1">mdi-plus-circle</v-icon> Cadastrar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="dialogCadastrarEndereco" width="32rem">
+      <v-card>
+        <v-form ref="form-endereco" :disabled="dialogCadastrarEnderecoLoading" @submit.prevent="cadastrarEndereco">
+          <v-card-title>Cadastrar endereço</v-card-title>
+          <v-card-text>
+            <v-text-field label="CEP" dense v-model="iptCep" v-mask="'########'" :loading="iptCepLoading"></v-text-field>
+            <v-text-field label="UF" dense v-model="iptUf" v-mask="'AA'"></v-text-field>
+            <v-text-field label="Bairro" dense v-model="iptBairro"></v-text-field>
+            <v-text-field label="Cidade" dense v-model="iptCidade"></v-text-field>
+            <v-text-field label="Logradouro" dense v-model="iptLogradouro" :rules="iptLogradouroRules"></v-text-field>
+          </v-card-text>
+          <v-card-actions class="justify-center">
+            <v-btn color="secondary" small depressed @click="dialogCadastrarEndereco = false" :disabled="dialogCadastrarEnderecoLoading">Cancelar</v-btn>
+            <v-btn color="primary" small depressed type="submit" :loading="dialogCadastrarEnderecoLoading">Salvar</v-btn>
+          </v-card-actions>
+        </v-form>
       </v-card>
     </v-dialog>
   </async-container>
@@ -162,6 +200,8 @@ import http from '@/plugins/axios';
 import BiometriaNitgen from '@/http/BiometriaNitgen';
 import moment from '@/plugins/moment';
 import LoadingDialog from '@/components/LoadingDialog';
+import StringHelper from '@/helper/StringHelper';
+import CepWebClient from '@/http/CepWebClient';
 export default {
   name: 'ClientesLista',
   components: {LoadingDialog, AsyncContainer},
@@ -196,6 +236,7 @@ export default {
       {value: 'acoes', text: 'EXCLUIR', width: '9.2rem', align: 'center', sortable: false},
     ],
     tableEnderecosItems: [],
+    tableEnderecosLoading: false,
     dialogEmails: false,
     tableEmailsHeaders: [
       {value: 'criado_em', text: 'DATA'},
@@ -203,6 +244,19 @@ export default {
       {value: 'acoes', text: 'EXCLUIR', width: '9.2rem', align: 'center', sortable: false},
     ],
     tableEmailsItems: [],
+    tableEmailsLoading: false,
+    dialogCadastrarEndereco: false,
+    dialogCadastrarEnderecoLoading: false,
+    iptCep: '',
+    iptCepLoading: false,
+    iptUf: '',
+    iptBairro: '',
+    iptCidade: '',
+    iptLogradouro: '',
+    iptLogradouroRules: [
+      v => (!!v && !!v.trim()) || 'Insira a rua e número neste campo',
+      v => (!!v && StringHelper.extractNumbers(v).length > 0) || 'O logradouro está sem o número',
+    ],
   }),
   methods: {
     async loadData() {
@@ -288,6 +342,8 @@ export default {
       }
     },
     async visualizarEnderecos(idCliente) {
+      this.tableEnderecosItems = [];
+      this.tableEnderecosLoading = true;
       this.dialogEnderecos = true;
       this.iptId = idCliente;
       try {
@@ -296,9 +352,13 @@ export default {
         this.tableEnderecosItems = data;
       } catch (e) {
         this.dialogEnderecos = false;
+      } finally {
+        this.tableEnderecosLoading = false;
       }
     },
     async visualizarEmails(idCliente) {
+      this.tableEmailsItems = [];
+      this.tableEmailsLoading = true;
       this.dialogEmails = true;
       this.iptId = idCliente;
       try {
@@ -307,20 +367,55 @@ export default {
         this.tableEmailsItems = data;
       } catch (e) {
         this.dialogEmails = false;
+      } finally {
+        this.tableEmailsLoading = false;
       }
     },
     async excluirEndereco(idEndereco) {
+      if (!confirm(`Tem certeza que vai apagar o endereço?`)) return;
       const webclient = http();
       await webclient.delete(`clientes/enderecos?id=${idEndereco}`);
       const {data} = await webclient.get(`clientes/enderecos?cadastro=${this.iptId}`);
       this.tableEnderecosItems = data;
     },
     async excluirEmail(idEmail) {
+      if (!confirm(`Tem certeza que vai apagar o email?`)) return;
       const webclient = http();
       await webclient.delete(`clientes/emails?id=${idEmail}`);
       const {data} = await webclient.get(`clientes/emails?cadastro=${this.iptId}`);
       this.tableEmailsItems = data;
     },
+    async cadastrarEmail() {
+      const email = prompt('Digite o endereço de e-mail');
+      if (!email) return;
+      const webclient = http();
+      await webclient.post('clientes/emails', {cadastro: this.iptId, email: email.trim().toLowerCase()})
+        .then(async () => {
+          const {data} = await webclient.get(`clientes/emails?cadastro=${this.iptId}`);
+          this.tableEmailsItems = data;
+        });
+    },
+    async cadastrarEndereco() {
+      if (!this.$refs['form-endereco'].validate()) return;
+      this.dialogCadastrarEnderecoLoading = true;
+      const dados = {
+        cadastro: this.iptId,
+        cep: this.iptCep ? StringHelper.extractNumbers(this.iptCep) : '',
+        uf: this.iptUf,
+        bairro: this.iptBairro.trim().toUpperCase(),
+        cidade: this.iptCidade.trim().toUpperCase(),
+        logradouro: this.iptLogradouro.trim().toUpperCase(),
+      };
+      try {
+        const webclient = http();
+        await webclient.post('clientes/enderecos', dados);
+        const {data} = await webclient.get(`clientes/enderecos?cadastro=${this.iptId}`);
+        this.tableEnderecosItems = data;
+        this.dialogCadastrarEndereco = false;
+      } finally {
+        this.dialogCadastrarEnderecoLoading = false;
+      }
+    }
   },
   computed: {
     existeCadastroComDigital() {
@@ -332,6 +427,21 @@ export default {
       await this.loadData();
     } catch (e) {
       await this.$router.push('/');
+    }
+  },
+  watch: {
+    iptCep(v) {
+      if (v && StringHelper.extractNumbers(v).length === 8) {
+        this.iptCepLoading = true;
+        CepWebClient.smart(StringHelper.extractNumbers(v))
+          .then(x => {
+            if (x.estado) this.iptUf = x.estado;
+            if (x.cidade) this.iptCidade = x.cidade;
+            if (x.bairro) this.iptBairro = x.bairro;
+            if (x.logradouro) this.iptLogradouro = x.logradouro;
+          })
+          .finally(() => this.iptCepLoading = false);
+      }
     }
   },
 }
