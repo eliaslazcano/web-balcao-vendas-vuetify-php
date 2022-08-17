@@ -1,6 +1,6 @@
 <template>
   <async-container :loading="loading">
-    <v-card width="64rem" class="mx-auto">
+    <v-card width="64rem" class="mx-auto mb-10">
       <v-card-title class="justify-space-between">
         Vendas
         <v-menu left bottom offset-y class="d-print-none">
@@ -36,7 +36,7 @@
               <date-picker-br inline no-buttons outlined dense hide-details v-model="iptDataInicial" label="Data inicial" prepend-inner-icon="mdi-calendar-arrow-right" :disabled="!iptFiltrarData"></date-picker-br>
             </v-col>
             <v-col cols="12" md="6">
-              <date-picker-br inline no-buttons outlined dense hide-details v-model="iptDataFinal" label="Data inicial" prepend-inner-icon="mdi-calendar-arrow-left" :disabled="!iptFiltrarData"></date-picker-br>
+              <date-picker-br inline no-buttons outlined dense hide-details v-model="iptDataFinal" label="Data limite" prepend-inner-icon="mdi-calendar-arrow-left" :disabled="!iptFiltrarData"></date-picker-br>
             </v-col>
           </v-row>
         </v-slide-y-transition>
