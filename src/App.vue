@@ -130,13 +130,20 @@ export default {
       this.$vuetify.theme.dark = !this.$vuetify.theme.dark;
       localStorage.setItem('darkmode', this.$vuetify.theme.dark ? '1' : '0');
     },
-    async carregarConfiguracoesGlobais() {
-      const webclient = http();
-      try {
-        const {data} = await webclient.get('configuracoes');
-        if (data && data.nome_empresa) this.nome_empresa = data.nome_empresa;
-      } catch (e) {
-        //
+    carregarConfiguracoesGlobais() {
+      const cache = sessionStorage.getItem('configuracoes');
+      if (cache) {
+        const configuracoes = JSON.parse(cache);
+        this.nome_empresa = configuracoes.nome_empresa;
+      } else {
+        const webclient = http();
+        webclient.get('configuracoes')
+          .then(r => {
+            if (r.data) {
+              sessionStorage.setItem('configuracoes', JSON.stringify(r.data));
+              if (r.data.nome_empresa) this.nome_empresa = r.data.nome_empresa;
+            }
+          });
       }
     },
   },
@@ -148,3 +155,16 @@ export default {
   },
 };
 </script>
+
+<style>
+.v-application--is-ltr .v-data-footer__select div.v-select {
+  margin-left: 8px;
+}
+.v-application--is-ltr div.v-data-footer__select {
+  margin-right: 0;
+}
+.v-application--is-ltr div.v-data-footer__pagination {
+  margin-left: 6px;
+  margin-right: 0;
+}
+</style>
