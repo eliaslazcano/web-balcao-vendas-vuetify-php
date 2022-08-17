@@ -5,19 +5,14 @@
       <v-toolbar-title v-if="nome_empresa">{{ nome_empresa }}</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-btn to="/venda" text>
-        <span class="mr-2">Vender</span>
+        <span class="mr-2" v-if="$vuetify.breakpoint.mdAndUp">Vender</span>
         <v-icon>mdi-cart</v-icon>
       </v-btn>
       <v-menu left bottom offset-y class="d-print-none">
-        <template v-slot:activator="{ on: menu, attrs }">
-          <v-tooltip bottom>
-            <template v-slot:activator="{ on: tooltip }">
-              <v-btn icon v-on="{ ...tooltip, ...menu }" v-bind="attrs">
-                <v-icon>mdi-dots-vertical</v-icon>
-              </v-btn>
-            </template>
-            <span>Opções</span>
-          </v-tooltip>
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn icon v-on="on" v-bind="attrs">
+            <v-icon>mdi-dots-vertical</v-icon>
+          </v-btn>
         </template>
         <v-list class="py-0" dense>
           <v-list-item @click="changeDarkMode">
@@ -78,7 +73,7 @@
           </v-list-item>
           <v-list-item to="/despesas">
             <v-list-item-icon>
-              <v-icon>mdi-cash-minus</v-icon>
+              <v-icon>mdi-playlist-edit</v-icon>
             </v-list-item-icon>
             <v-list-item-content>
               <v-list-item-title>Despesas</v-list-item-title>
@@ -107,7 +102,9 @@
     </v-navigation-drawer>
 
     <v-main>
-      <router-view/>
+      <transition name="fade-transition" @after-leave="$vuetify.goTo(1)" mode="out-in">
+        <router-view/>
+      </transition>
     </v-main>
 
     <v-snackbar

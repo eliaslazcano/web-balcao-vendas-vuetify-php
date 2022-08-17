@@ -16,7 +16,7 @@
           @keydown="(x) => {if (x.code === 'F2' && !cadastro) dialogPesquisarCadastro = true}"
           @click:clear="desvincularCadastro"
           :clearable="!cadastro"
-          autofocus
+          :autofocus="$vuetify.breakpoint.mdAndUp"
           outlined
           dense
         ></v-text-field>
@@ -83,7 +83,7 @@
         </template>
         <template v-slot:[`item.valor`]="{item}">
           <v-edit-dialog :return-value.sync="item.valor">
-            R$ {{ item.valor ? parseFloat(item.valor).toFixed(2) : '0.00' }}
+            <span style="white-space: nowrap">R$ {{ item.valor ? parseFloat(item.valor).toFixed(2) : '0.00' }}</span>
             <template v-slot:input>
               <v-text-field
                 prefix="R$"
@@ -128,7 +128,8 @@
             prepend-inner-icon="mdi-magnify"
             v-model="tableCadastrosSearch"
             @keydown="(x) => {if (x.code === 'F2') pesquisarCadastroPorDigital()}"
-            hide-details dense outlined autofocus
+            :autofocus="$vuetify.breakpoint.mdAndUp"
+            hide-details dense outlined
           >
             <template v-slot:append-outer>
               <v-btn color="primary" small @click="pesquisarCadastroPorDigital" v-if="existeCadastroComDigital && biometriaDisponivel">

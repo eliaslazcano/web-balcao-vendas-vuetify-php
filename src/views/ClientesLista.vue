@@ -27,7 +27,8 @@
           prepend-inner-icon="mdi-magnify"
           v-model="tableSearch"
           @keydown="(x) => {if (x.code === 'F2') pesquisarCadastroPorDigital()}"
-          hide-details autofocus
+          :autofocus="$vuetify.breakpoint.mdAndUp"
+          hide-details
         >
           <template v-slot:append-outer>
             <v-btn color="primary" small @click="pesquisarCadastroPorDigital" v-if="existeCadastroComDigital && biometriaDisponivel">
@@ -42,6 +43,7 @@
         :search="tableSearch"
         :dense="tableDense"
         :footer-props="{'items-per-page-options': [10, 15, 25]}"
+        :mobile-breakpoint="0"
         sort-by="nome"
       >
         <template v-slot:[`item.criado_em`]="{item}">
@@ -231,8 +233,8 @@ export default {
     biometriaDisponivel: false,
     tableHeaders: [
       {value: 'id', text: 'COD.', width: '6rem'},
-      {value: 'criado_em', text: 'DATA CADASTRO', width: '9.2rem'},
       {value: 'nome', text: 'NOME'},
+      {value: 'criado_em', text: 'DATA CADASTRO', width: '9.2rem'},
       {value: 'acoes', text: 'AÇÕES', width: '9.2rem', align: 'center', sortable: false},
     ],
     tableItems: [],

@@ -43,7 +43,9 @@
         no-data-text="Nenhum produto vendido"
         :footer-props="{'items-per-page-options': [10, 15, 25]}"
       >
-        <template v-slot:[`item.valor`]="{item}">R$ {{ item.valor ? formatoMonetario(item.valor) : '0,00' }}</template>
+        <template v-slot:[`item.valor`]="{item}">
+          <span style="white-space: nowrap">R$ {{ item.valor ? formatoMonetario(item.valor) : '0,00' }}</span>
+        </template>
       </v-data-table>
     </v-card>
   </async-container>

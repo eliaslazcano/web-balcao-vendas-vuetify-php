@@ -22,7 +22,7 @@
         </v-menu>
       </v-card-title>
       <v-card-text>
-        <v-text-field label="Pesquisar" prepend-inner-icon="mdi-magnify" v-model="tableSearch" hide-details autofocus></v-text-field>
+        <v-text-field label="Pesquisar" prepend-inner-icon="mdi-magnify" v-model="tableSearch" hide-details :autofocus="$vuetify.breakpoint.mdAndUp"></v-text-field>
       </v-card-text>
       <v-data-table
         :headers="tableHeaders"
@@ -30,11 +30,14 @@
         :search="tableSearch"
         :dense="tableDense"
         :footer-props="{'items-per-page-options': [10, 15, 25]}"
+        :mobile-breakpoint="0"
         no-data-text="Nenhum produto encontrado"
         no-results-text="Nenhum produto encontrado"
         sort-by="nome"
       >
-        <template v-slot:[`item.valor`]="{item}">R$ {{ formatoMonetario(item.valor) }}</template>
+        <template v-slot:[`item.valor`]="{item}">
+          <span style="white-space: nowrap">R$ {{ formatoMonetario(item.valor) }}</span>
+        </template>
         <template v-slot:[`item.acoes`]="{item}">
           <v-btn color="yellow darken-4" small icon @click="editarProduto(item)">
             <v-icon>mdi-pencil</v-icon>

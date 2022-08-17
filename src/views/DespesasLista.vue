@@ -40,7 +40,13 @@
             </v-col>
           </v-row>
         </v-slide-y-transition>
-        <v-text-field label="Pesquisar" prepend-inner-icon="mdi-magnify" v-model="tableSearch" hide-details autofocus></v-text-field>
+        <v-text-field
+          label="Pesquisar"
+          prepend-inner-icon="mdi-magnify"
+          v-model="tableSearch"
+          hide-details
+          :autofocus="$vuetify.breakpoint.mdAndUp"
+        ></v-text-field>
       </v-card-text>
       <v-data-table
         :loading="tableLoading"
@@ -49,12 +55,15 @@
         :dense="tableDense"
         :search="tableSearch"
         :footer-props="{'items-per-page-options': [10, 15, 25]}"
+        :mobile-breakpoint="0"
         no-data-text="Nenhuma despesa encontrada"
         no-results-text="Nenhuma despesa encontrada"
         sort-by="id"
         sort-desc
       >
-        <template v-slot:[`item.valor`]="{item}">R$ {{ formatoMonetario(item.valor) }}</template>
+        <template v-slot:[`item.valor`]="{item}">
+          <span style="white-space: nowrap">R$ {{ formatoMonetario(item.valor) }}</span>
+        </template>
         <template v-slot:[`item.criado_em`]="{item}">{{ moment(item.criado_em).format('DD/MM/YYYY HH:mm') }}</template>
         <template v-slot:[`item.acoes`]="{item}">
           <v-btn color="yellow darken-4" small icon @click="editarItem(item)">

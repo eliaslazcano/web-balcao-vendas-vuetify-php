@@ -40,7 +40,7 @@
             </v-col>
           </v-row>
         </v-slide-y-transition>
-        <v-text-field label="Pesquisar" class="mt-3" prepend-inner-icon="mdi-magnify" v-model="tableSearch" hide-details autofocus></v-text-field>
+        <v-text-field label="Pesquisar" class="mt-3" prepend-inner-icon="mdi-magnify" v-model="tableSearch" hide-details :autofocus="$vuetify.breakpoint.mdAndUp"></v-text-field>
       </v-card-text>
       <v-data-table
         :headers="tableHeaders"
@@ -50,6 +50,7 @@
         :dense="tableDense"
         :footer-props="{'items-per-page-options': [10, 15, 25]}"
         :items-per-page="15"
+        :mobile-breakpoint="0"
         no-data-text="Nenhuma venda encontrada"
         no-results-text="Nenhuma venda encontrada"
         sort-by="id"
