@@ -167,4 +167,7 @@ export default {
   margin-left: 6px;
   margin-right: 0;
 }
+thead.v-data-table-header th {
+  white-space: nowrap;
+}
 </style>

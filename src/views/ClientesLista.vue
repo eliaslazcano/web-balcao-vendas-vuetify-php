@@ -1,6 +1,6 @@
 <template>
   <async-container :loading="loading">
-    <v-card width="64rem" class="mx-auto mb-10">
+    <v-card width="64rem" class="mx-auto mb-12">
       <v-card-title class="justify-space-between">
         Clientes
         <v-menu left bottom offset-y class="d-print-none">
