@@ -33,7 +33,26 @@
       </v-card-text>
     </v-card>
     <v-card width="64rem" class="mx-auto">
-      <v-card-title>Lista de Produtos</v-card-title>
+      <v-card-title class="justify-space-between">
+        Lista de Produtos
+        <v-menu left bottom offset-y class="d-print-none">
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn icon v-bind="attrs" v-on="on">
+              <v-icon>mdi-dots-vertical</v-icon>
+            </v-btn>
+          </template>
+          <v-list class="py-0" dense>
+            <v-list-item @click="tableDense = !tableDense">
+              <v-list-item-icon>
+                <v-icon>{{ tableDense ? 'mdi-arrow-expand-vertical' : 'mdi-arrow-collapse-vertical' }}</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>{{ tableDense ? 'Visualização expandida' : 'Visualização compacta' }}</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+      </v-card-title>
       <v-card-text class="pb-0">
         <v-autocomplete
           label="Adicionar produto"
@@ -63,6 +82,8 @@
         :headers="tableHeaders"
         :items="tableItems"
         :search="tableSearch"
+        :dense="tableDense"
+        :mobile-breakpoint="0"
         disable-pagination
         hide-default-footer
         no-data-text="Nenhum produto adicionado"
@@ -144,6 +165,7 @@
           :search="tableCadastrosSearch"
           :loading="tableCadastrosLoading"
           :footer-props="{'items-per-page-options': [5, 10, 15]}"
+          :mobile-breakpoint="0"
           sort-by="id"
           sort-desc
           dense
@@ -180,13 +202,14 @@ export default {
     iptProduto: null,
     iptProdutoItems: [],
     tableHeaders: [
-      {value: 'produto_nome', text: 'PRODUTO'},
+      {value: 'produto_nome', text: 'PRODUTO', cellClass: 'text-no-wrap'},
       {value: 'quantidade', text: 'QUANTIDADE'},
       {value: 'valor', text: 'VALOR', width: '10rem'},
-      {value: 'acoes', text: 'REMOVER', sortable: false, filterable: false, align: 'center'},
+      {value: 'acoes', text: 'REMOVER', align: 'center', cellClass: 'text-no-wrap', sortable: false, filterable: false},
     ],
     tableItems: [],
     tableSearch: '',
+    tableDense: false,
     enviandoVenda: false,
     dialogPesquisarCadastro: false,
     biometriaDisponivel: false,

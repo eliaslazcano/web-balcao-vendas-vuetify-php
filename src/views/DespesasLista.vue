@@ -1,7 +1,7 @@
 <template>
   <async-container :loading="loading">
-    <v-card width="62rem" class="mx-auto mb-10">
-      <v-card-title class="justify-md-space-between">
+    <v-card width="62rem" class="mx-auto mb-12">
+      <v-card-title class="justify-space-between">
         Despesas
         <v-menu left bottom offset-y class="d-print-none">
           <template v-slot:activator="{ on, attrs }">
@@ -24,6 +24,14 @@
               </v-list-item-icon>
               <v-list-item-content>
                 <v-list-item-title>{{ iptFiltrarData ? 'Não filtrar a data' : 'Filtrar a data' }}</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="imprimir">
+              <v-list-item-icon>
+                <v-icon>mdi-printer</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>Imprimir</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list>
@@ -54,7 +62,7 @@
         :headers="tableHeaders"
         :dense="tableDense"
         :search="tableSearch"
-        :footer-props="{'items-per-page-options': [10, 15, 25]}"
+        :footer-props="{'items-per-page-options': [10, 15, 25, 50]}"
         :mobile-breakpoint="0"
         no-data-text="Nenhuma despesa encontrada"
         no-results-text="Nenhuma despesa encontrada"
@@ -75,15 +83,7 @@
         </template>
         <template v-slot:foot>
           <tfoot>
-          <tr v-if="$vuetify.breakpoint.name === 'xs'">
-            <td>
-              <div class="justify-space-between d-flex">
-                <span class="subtitle-2 primary--text">TOTAL</span>
-                <span class="subtitle-2 primary--text">R$ {{ valorTotal.toFixed(2) }}</span>
-              </div>
-            </td>
-          </tr>
-          <tr v-else>
+          <tr>
             <td>
               <p class="subtitle-2 primary--text mb-0">TOTAL</p>
             </td>
@@ -142,9 +142,9 @@ export default {
     tableHeaders: [
       {value: 'id', text: 'COD.'},
       {value: 'descricao', text: 'DESCRICAO'},
-      {value: 'valor', text: 'VALOR'},
-      {value: 'criado_em', text: 'DATA'},
-      {value: 'acoes', text: 'AÇÕES', sortable: false, filterable: false},
+      {value: 'valor', text: 'VALOR', cellClass: 'text-no-wrap'},
+      {value: 'criado_em', text: 'DATA', cellClass: 'text-no-wrap'},
+      {value: 'acoes', text: 'AÇÕES', align: 'center', cellClass: 'text-no-wrap', sortable: false, filterable: false},
     ],
     tableDense: false,
     tableSearch: '',
@@ -160,6 +160,9 @@ export default {
     iptFiltrarData: true,
   }),
   methods: {
+    imprimir() {
+      setTimeout(() => window.print(), 500);
+    },
     formatoMonetario(valor) {
       return StringHelper.monetaryFormat(valor);
     },

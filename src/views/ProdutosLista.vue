@@ -1,6 +1,6 @@
 <template>
   <async-container :loading="loading">
-    <v-card width="64rem" class="mx-auto mb-10">
+    <v-card width="64rem" class="mx-auto mb-12">
       <v-card-title class="justify-space-between">
         Produtos
         <v-menu left bottom offset-y class="d-print-none">
@@ -18,6 +18,14 @@
                 <v-list-item-title>{{ tableDense ? 'Visualização expandida' : 'Visualização compacta' }}</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
+            <v-list-item @click="imprimir">
+              <v-list-item-icon>
+                <v-icon>mdi-printer</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>Imprimir</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
           </v-list>
         </v-menu>
       </v-card-title>
@@ -29,9 +37,9 @@
         :items="tableItems"
         :search="tableSearch"
         :dense="tableDense"
-        :footer-props="{'items-per-page-options': [10, 15, 25]}"
+        :footer-props="{'items-per-page-options': [10, 15, 25, 50]}"
         :mobile-breakpoint="0"
-        no-data-text="Nenhum produto encontrado"
+        no-data-text="Nenhum produto cadastrado"
         no-results-text="Nenhum produto encontrado"
         sort-by="nome"
       >
@@ -59,7 +67,7 @@
           <v-card-title>{{ iptId ? 'Editar' : 'Criar' }} produto</v-card-title>
           <v-card-text>
             <v-text-field label="Nome" v-model="iptNome" outlined dense :rules="[v => (!!v && !!v.trim()) || 'Coloque o nome']"></v-text-field>
-            <v-text-field label="Codigo" v-model="iptCodigo" outlined dense></v-text-field>
+            <v-text-field label="Codigo" v-model="iptCodigo" outlined dense hint="O código é opcional, mas facilita adicionar na venda." persistent-hint></v-text-field>
             <text-field-monetary label="Valor" v-model="iptValor" prefix="R$" outlined dense></text-field-monetary>
           </v-card-text>
           <v-card-actions class="justify-center">
@@ -85,10 +93,10 @@ export default {
   data: () => ({
     loading: true,
     tableHeaders: [
-      {value: 'nome', text: 'NOME'},
+      {value: 'nome', text: 'NOME', cellClass: 'text-no-wrap'},
       {value: 'valor', text: 'VALOR UN.'},
       {value: 'codigo', text: 'CODIGO'},
-      {value: 'acoes', text: 'AÇÕES', width: '6rem', sortable: false, filterable: false},
+      {value: 'acoes', text: 'AÇÕES', align: 'center', cellClass: 'text-no-wrap', sortable: false, filterable: false},
     ],
     tableItems: [],
     tableSearch: '',
@@ -102,6 +110,9 @@ export default {
     deletandoProduto: false,
   }),
   methods: {
+    imprimir() {
+      setTimeout(() => window.print(), 500);
+    },
     formatoMonetario(valor) {
       return StringHelper.monetaryFormat(valor);
     },

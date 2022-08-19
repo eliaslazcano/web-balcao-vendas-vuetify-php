@@ -1,6 +1,6 @@
 <template>
   <async-container :loading="loading">
-    <v-card width="64rem" class="mx-auto mb-10">
+    <v-card width="64rem" class="mx-auto mb-12">
       <v-card-title class="justify-space-between">
         Vendas
         <v-menu left bottom offset-y class="d-print-none">
@@ -26,6 +26,14 @@
                 <v-list-item-title>{{ iptFiltrarData ? 'Não filtrar a data' : 'Filtrar a data' }}</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
+            <v-list-item @click="imprimir">
+              <v-list-item-icon>
+                <v-icon>mdi-printer</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>Imprimir</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
           </v-list>
         </v-menu>
       </v-card-title>
@@ -48,8 +56,7 @@
         :search="tableSearch"
         :loading="tableLoading"
         :dense="tableDense"
-        :footer-props="{'items-per-page-options': [10, 15, 25]}"
-        :items-per-page="15"
+        :footer-props="{'items-per-page-options': [10, 15, 25, 50]}"
         :mobile-breakpoint="0"
         no-data-text="Nenhuma venda encontrada"
         no-results-text="Nenhuma venda encontrada"
@@ -97,16 +104,19 @@ export default {
       {value: 'criado_em', text: 'DATA', width: '12rem'},
       {value: 'cliente', text: 'CLIENTE'},
       {value: 'debito', text: 'VALOR', filterable: false},
-      {value: 'acoes', text: 'ABRIR', width: '6rem', sortable: false, filterable: false},
+      {value: 'acoes', text: 'ABRIR', align: 'center', cellClass: 'text-no-wrap', sortable: false, filterable: false},
     ],
     tableItems: [],
     tableSearch: '',
-    tableDense: true,
+    tableDense: false,
     iptDataInicial: moment().format('YYYY-01-01'),
     iptDataFinal: moment().format('YYYY-MM-DD'),
     iptFiltrarData: true,
   }),
   methods: {
+    imprimir() {
+      setTimeout(() => window.print(), 500);
+    },
     async loadData() {
       this.tableLoading = true;
       const webclient = http();

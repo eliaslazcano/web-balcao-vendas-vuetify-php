@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-app-bar app clipped-left dense dark :color="$vuetify.theme.dark ? 'secondary' : 'primary'">
+    <v-app-bar app clipped-left dense dark :color="$vuetify.theme.dark ? 'secondary' : 'primary'" class="d-print-none">
       <v-app-bar-nav-icon @click.stop="mostrarMenu = !mostrarMenu" />
       <v-toolbar-title v-if="nome_empresa">{{ nome_empresa }}</v-toolbar-title>
       <v-spacer></v-spacer>
@@ -166,5 +166,8 @@ export default {
 .v-application--is-ltr div.v-data-footer__pagination {
   margin-left: 6px;
   margin-right: 0;
+}
+thead.v-data-table-header th {
+  white-space: nowrap;
 }
 </style>
