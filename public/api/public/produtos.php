@@ -14,6 +14,12 @@ if (HttpHelper::isGet()) {
   $codigo = HttpHelper::validarParametro('codigo');
   $nome = HttpHelper::validarParametro('nome');
   $valor = HttpHelper::validarParametro('valor');
+
+  if ($codigo) {
+    $produto_codigo = $db->queryPrimeiraLinha('SELECT id, nome FROM produtos WHERE codigo = :codigo', [':codigo' => $codigo]);
+    if ($produto_codigo && $produto_codigo['id'] !== $id) HttpHelper::erroJson(400, "O código que você colocou está em uso por outro produto: \"{$produto_codigo['nome']}\"");
+  }
+
   if ($id) {
     $sql = 'UPDATE produtos SET nome = UPPER(:nome), codigo = :codigo, valor = :valor WHERE id = :id';
     $x = $db->update($sql, [':nome' => $nome, ':codigo' => $codigo ?: null, ':valor' => $valor, ':id' => $id]);

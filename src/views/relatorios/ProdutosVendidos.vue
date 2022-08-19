@@ -18,6 +18,14 @@
                 <v-list-item-title>{{ tableDense ? 'Visualização expandida' : 'Visualização compacta' }}</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
+            <v-list-item @click="imprimir">
+              <v-list-item-icon>
+                <v-icon>mdi-printer</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>Imprimir</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
           </v-list>
         </v-menu>
       </v-card-title>
@@ -41,7 +49,7 @@
         sort-by="quantidade"
         sort-desc
         no-data-text="Nenhum produto vendido"
-        :footer-props="{'items-per-page-options': [10, 15, 25]}"
+        :footer-props="{'items-per-page-options': [10, 15, 25, 50]}"
       >
         <template v-slot:[`item.valor`]="{item}">
           <span style="white-space: nowrap">R$ {{ item.valor ? formatoMonetario(item.valor) : '0,00' }}</span>
@@ -75,6 +83,9 @@ export default {
     tableDense: false,
   }),
   methods: {
+    imprimir() {
+      setTimeout(() => window.print(), 500);
+    },
     async loadData() {
       this.tableLoading = true;
       const webclient = http();

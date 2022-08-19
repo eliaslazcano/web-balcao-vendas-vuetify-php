@@ -18,6 +18,14 @@
                 <v-list-item-title>{{ tableDense ? 'Visualização expandida' : 'Visualização compacta' }}</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
+            <v-list-item @click="imprimir">
+              <v-list-item-icon>
+                <v-icon>mdi-printer</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>Imprimir</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
           </v-list>
         </v-menu>
       </v-card-title>
@@ -42,8 +50,10 @@
         :items="tableItems"
         :search="tableSearch"
         :dense="tableDense"
-        :footer-props="{'items-per-page-options': [10, 15, 25]}"
+        :footer-props="{'items-per-page-options': [10, 15, 25, 50]}"
         :mobile-breakpoint="0"
+        no-data-text="Nenhum cliente cadastrado"
+        no-results-text="Nenhum cliente encontrado"
         sort-by="nome"
       >
         <template v-slot:[`item.criado_em`]="{item}">
@@ -235,7 +245,7 @@ export default {
       {value: 'id', text: 'COD.', width: '6rem'},
       {value: 'nome', text: 'NOME'},
       {value: 'criado_em', text: 'DATA CADASTRO', width: '9.2rem'},
-      {value: 'acoes', text: 'AÇÕES', width: '9.2rem', align: 'center', sortable: false},
+      {value: 'acoes', text: 'AÇÕES', align: 'center', cellClass: 'text-no-wrap', sortable: false, filterable: false},
     ],
     tableItems: [],
     tableSearch: '',
@@ -282,6 +292,9 @@ export default {
     ],
   }),
   methods: {
+    imprimir() {
+      setTimeout(() => window.print(), 500);
+    },
     async loadData() {
       const webclient = http();
       const {data} = await webclient.get('clientes');
