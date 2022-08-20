@@ -202,10 +202,9 @@
             </td>
             <td></td>
             <td></td>
-            <td>
-              <p class="subtitle-2 primary--text mb-0">R$ {{ formatoMonetario(valorTotal) }}</p>
+            <td colspan="2">
+              <p class="subtitle-2 primary--text mb-0 text-no-wrap">R$ {{ formatoMonetario(valorTotal) }}</p>
             </td>
-            <td></td>
           </tr>
           </tfoot>
         </template>
