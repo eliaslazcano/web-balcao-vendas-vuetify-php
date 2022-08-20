@@ -170,4 +170,10 @@ export default {
 thead.v-data-table-header th {
   white-space: nowrap;
 }
+.v-dialog {
+  margin: .8rem !important;
+}
+.cursor-pointer {
+  cursor: pointer;
+}
 </style>

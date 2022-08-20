@@ -39,7 +39,7 @@
       </v-card-title>
       <v-card-text>
         <v-slide-y-transition>
-          <v-row v-if="iptFiltrarData">
+          <v-row v-if="iptFiltrarData" class="mb-2">
             <v-col cols="12" md="6">
               <date-picker-br inline no-buttons outlined dense hide-details v-model="iptDataInicial" label="Data inicial" prepend-inner-icon="mdi-calendar-arrow-right" :disabled="!iptFiltrarData"></date-picker-br>
             </v-col>
@@ -48,7 +48,7 @@
             </v-col>
           </v-row>
         </v-slide-y-transition>
-        <v-text-field label="Pesquisar" class="mt-3" prepend-inner-icon="mdi-magnify" v-model="tableSearch" hide-details :autofocus="$vuetify.breakpoint.mdAndUp"></v-text-field>
+        <v-text-field label="Pesquisar" prepend-inner-icon="mdi-magnify" v-model="tableSearch" hide-details :autofocus="$vuetify.breakpoint.mdAndUp"></v-text-field>
       </v-card-text>
       <v-data-table
         :headers="tableHeaders"

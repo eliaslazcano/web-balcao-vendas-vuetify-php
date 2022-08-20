@@ -5,6 +5,7 @@
       v-model="cmpValue"
       v-bind:label="label"
       v-bind:placeholder="placeholder"
+      v-bind:persistent-placeholder="persistentPlaceholder"
       v-bind:readonly="readonly"
       v-bind:disabled="disabled"
       v-bind:outlined="outlined"
@@ -16,6 +17,9 @@
       v-bind:backgroundColor="backgroundColor"
       v-bind:prefix="prefix"
       v-bind:suffix="suffix"
+      v-bind:hint="hint"
+      v-bind:persistent-hint="persistentHint"
+      v-bind:success="success"
       v-on:keypress="keyPress"
     ></v-text-field>
   </div>
@@ -28,6 +32,9 @@ export default {
     value: {type: [String, Number], default: '0'},
     label: { type: String, default: ''},
     placeholder: {type: String, default: undefined},
+    persistentPlaceholder: {type: Boolean, default: false},
+    hint: {type: String, default: undefined},
+    persistentHint: {type: Boolean, default: false},
     readonly: {type: Boolean, default: false},
     dense: {type: Boolean, default: false},
     error: {type: Boolean, default: false},
@@ -39,6 +46,7 @@ export default {
     backgroundColor: {type: String, default: undefined},
     prefix: {type: String, default: undefined},
     suffix: {type: String, default: undefined},
+    success: {type: Boolean, default: false},
     valueWhenIsEmpty: {type: String, default: ''}, // "0" or "" or null
     options: {
       type: Object,

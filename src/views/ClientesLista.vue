@@ -155,7 +155,6 @@
           no-data-text="Nenhum endereço cadastrado"
           sort-by="criado_em"
           sort-desc
-          dense
         >
           <template v-slot:[`item.criado_em`]="{item}">
             <span v-if="item.criado_em">{{ moment(item.criado_em).format('DD/MM/YYYY HH:mm') }}</span>
@@ -185,7 +184,6 @@
           no-data-text="Nenhum e-mail cadastrado"
           sort-by="criado_em"
           sort-desc
-          dense
         >
           <template v-slot:[`item.criado_em`]="{item}">
             <span v-if="item.criado_em">{{ moment(item.criado_em).format('DD/MM/YYYY HH:mm') }}</span>
@@ -210,11 +208,11 @@
         <v-form ref="form-endereco" :disabled="dialogCadastrarEnderecoLoading" @submit.prevent="cadastrarEndereco">
           <v-card-title>Cadastrar endereço</v-card-title>
           <v-card-text>
-            <v-text-field label="CEP" dense v-model="iptCep" v-mask="'########'" :loading="iptCepLoading"></v-text-field>
-            <v-text-field label="UF" dense v-model="iptUf" v-mask="'AA'"></v-text-field>
-            <v-text-field label="Bairro" dense v-model="iptBairro"></v-text-field>
-            <v-text-field label="Cidade" dense v-model="iptCidade"></v-text-field>
-            <v-text-field label="Logradouro" dense v-model="iptLogradouro" :rules="iptLogradouroRules"></v-text-field>
+            <v-text-field label="CEP" v-model="iptCep" v-mask="'########'" :loading="iptCepLoading"></v-text-field>
+            <v-text-field label="UF" v-model="iptUf" v-mask="'AA'"></v-text-field>
+            <v-text-field label="Bairro" v-model="iptBairro"></v-text-field>
+            <v-text-field label="Cidade" v-model="iptCidade" :rules="[v => (!!v && !!v.trim()) || 'Insira a rua e número neste campo']"></v-text-field>
+            <v-text-field label="Logradouro" v-model="iptLogradouro" :rules="iptLogradouroRules"></v-text-field>
           </v-card-text>
           <v-card-actions class="justify-center">
             <v-btn color="secondary" small depressed @click="dialogCadastrarEndereco = false" :disabled="dialogCadastrarEnderecoLoading">Cancelar</v-btn>
@@ -272,7 +270,7 @@ export default {
     tableEnderecosLoading: false,
     dialogEmails: false,
     tableEmailsHeaders: [
-      {value: 'criado_em', text: 'DATA'},
+      {value: 'criado_em', text: 'DATA', width: '9.2rem'},
       {value: 'email', text: 'E-MAIL', sortable: false},
       {value: 'acoes', text: 'EXCLUIR', width: '9.2rem', align: 'center', sortable: false},
     ],

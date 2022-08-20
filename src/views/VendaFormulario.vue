@@ -4,32 +4,53 @@
       <v-card-title>{{ id ? 'Venda Nº' + id : 'Registrar Venda' }}</v-card-title>
       <v-card-subtitle v-if="!!criado_em">Criado em {{ moment(criado_em).format('DD/MM/YYYY HH:mm') }}</v-card-subtitle>
       <v-card-text>
-        <v-text-field
-          label="Cliente"
-          v-model="iptCliente"
-          :disabled="enviandoVenda"
-          :readonly="!!cadastro || !!iptClienteId"
-          placeholder="Nome do cliente"
-          persistent-placeholder
-          :append-outer-icon="cadastro ? undefined : 'mdi-account-search'"
-          @click:append-outer="dialogPesquisarCadastro = true"
-          @keydown="(x) => {if (x.code === 'F2' && !cadastro) dialogPesquisarCadastro = true}"
-          @click:clear="desvincularCadastro"
-          :clearable="!cadastro"
-          :autofocus="$vuetify.breakpoint.mdAndUp"
-          outlined
-          dense
-        ></v-text-field>
-        <v-text-field label="Nota" v-model="iptNota" outlined dense placeholder="Observações.."></v-text-field>
-        <text-field-monetary
-          label="Valor Pago"
-          v-model="iptCredito"
-          :disabled="enviandoVenda"
-          type="tel"
-          prefix="R$"
-          outlined
-          dense
-        ></text-field-monetary>
+        <v-form @submit.prevent :disabled="enviandoVenda">
+          <v-row dense>
+            <v-col cols="4" sm="3" md="2">
+              <v-text-field
+                label="Cod. Cliente"
+                :value="cadastro || iptClienteId"
+                :hint="cadastro || iptClienteId ? '' : 'Não possui'"
+                persistent-placeholder
+                placeholder="N/P"
+                persistent-hint
+                outlined
+                dense
+                disabled
+              ></v-text-field>
+            </v-col>
+            <v-col cols="8" sm="9" md="10">
+              <v-text-field
+                label="Cliente"
+                v-model="iptCliente"
+                :readonly="!!cadastro || !!iptClienteId"
+                placeholder="Nome do cliente"
+                persistent-placeholder
+                :append-outer-icon="cadastro ? undefined : 'mdi-account-search'"
+                @click:append-outer="dialogPesquisarCadastro = true"
+                @keydown="(x) => {if (x.code === 'F2' && !cadastro) dialogPesquisarCadastro = true}"
+                :hint="$vuetify.breakpoint.mdAndUp && !cadastro ? 'Aperte F2 para buscar um cliente cadastrado' : undefined"
+                @click:clear="desvincularCadastro"
+                :clearable="!cadastro"
+                :autofocus="$vuetify.breakpoint.mdAndUp"
+                outlined
+                dense
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-text-field label="Nota" v-model="iptNota" class="mt-2" outlined dense placeholder="Nenhuma observação" persistent-placeholder></v-text-field>
+          <text-field-monetary
+            label="Valor Pago"
+            v-model="iptCredito"
+            type="tel"
+            prefix="R$"
+            outlined
+            dense
+            :hint="(valorTotal > 0 && iptCredito < valorTotal) ? 'Falta pagar R$ ' + formatoMonetario(valorTotal - iptCredito) : undefined"
+            persistent-hint
+            :success="!!valorTotal && !!iptCredito && valorTotal <= iptCredito"
+          ></text-field-monetary>
+        </v-form>
       </v-card-text>
     </v-card>
     <v-card width="64rem" class="mx-auto">
@@ -61,6 +82,7 @@
           item-value="id"
           item-text="nome"
           no-data-text="Nenhum produto correspondente"
+          placeholder="Nome ou código do produto"
           prepend-inner-icon="mdi-plus-circle"
           :disabled="enviandoVenda"
           :filter="iptProdutoFiltro"
@@ -104,7 +126,7 @@
         </template>
         <template v-slot:[`item.valor`]="{item}">
           <v-edit-dialog :return-value.sync="item.valor">
-            <span style="white-space: nowrap">R$ {{ item.valor ? parseFloat(item.valor).toFixed(2) : '0.00' }}</span>
+            <span style="white-space: nowrap">R$ {{ item.valor ? formatoMonetario(item.valor) : '0,00' }}</span>
             <template v-slot:input>
               <v-text-field
                 prefix="R$"
@@ -127,7 +149,7 @@
             </td>
             <td></td>
             <td>
-              <p class="subtitle-2 primary--text mb-0">R$ {{ valorTotal.toFixed(2) }}</p>
+              <p class="subtitle-2 primary--text mb-0">R$ {{ formatoMonetario(valorTotal) }}</p>
             </td>
             <td></td>
           </tr>
@@ -143,14 +165,19 @@
     <v-dialog v-model="dialogPesquisarCadastro" width="40rem">
       <v-card>
         <v-card-title>Pesquisar Cliente</v-card-title>
-        <v-card-text>
+        <v-card-text class="px-3">
+          <p class="subtitle-2 blue--text">
+            <v-icon>{{ $vuetify.breakpoint.xs ? 'mdi-gesture-tap' : 'mdi-cursor-default-click' }}</v-icon>
+            Clique no cliente desejado da lista
+          </p>
           <v-text-field
-            label="Pesquisar"
+            label="Filtrar"
             prepend-inner-icon="mdi-magnify"
             v-model="tableCadastrosSearch"
             @keydown="(x) => {if (x.code === 'F2') pesquisarCadastroPorDigital()}"
             :autofocus="$vuetify.breakpoint.mdAndUp"
-            hide-details dense outlined
+            placeholder="Nome ou código"
+            persistent-placeholder hide-details dense outlined
           >
             <template v-slot:append-outer>
               <v-btn color="primary" small @click="pesquisarCadastroPorDigital" v-if="existeCadastroComDigital && biometriaDisponivel">
@@ -159,6 +186,7 @@
             </template>
           </v-text-field>
         </v-card-text>
+        <v-divider class="mb-1"></v-divider>
         <v-data-table
           :headers="tableCadastrosHeaders"
           :items="tableCadastrosItems"
@@ -166,9 +194,9 @@
           :loading="tableCadastrosLoading"
           :footer-props="{'items-per-page-options': [5, 10, 15]}"
           :mobile-breakpoint="0"
-          sort-by="id"
-          sort-desc
-          dense
+          no-data-text="Nenhum cliente cadastrado"
+          no-results-text="Nenhum cliente encontrado"
+          sort-by="nome"
           @click:row="selecionarCadastro"
         ></v-data-table>
       </v-card>
@@ -184,6 +212,7 @@ import AsyncContainer from '@/components/AsyncContainer';
 import BiometriaNitgen from '@/http/BiometriaNitgen';
 import TextFieldMonetary from '@/components/TextFieldMonetary';
 import LoadingDialog from '@/components/LoadingDialog';
+import StringHelper from '@/helper/StringHelper';
 export default {
   name: 'VendaFormulario',
   props: {
@@ -214,8 +243,8 @@ export default {
     dialogPesquisarCadastro: false,
     biometriaDisponivel: false,
     tableCadastrosHeaders: [
-      {value: 'id', text: 'COD.', width: '6rem'},
-      {value: 'nome', text: 'NOME'},
+      {value: 'id', text: 'COD.', width: '6rem', cellClass: 'cursor-pointer'},
+      {value: 'nome', text: 'NOME', cellClass: 'cursor-pointer text-no-wrap'},
     ],
     tableCadastrosItems: [],
     tableCadastrosSearch: '',
@@ -335,6 +364,9 @@ export default {
         this.tableItems.splice(index, 1);
       }
       console.log(item);
+    },
+    formatoMonetario(valor) {
+      return StringHelper.monetaryFormat(valor);
     },
   },
   created() {
