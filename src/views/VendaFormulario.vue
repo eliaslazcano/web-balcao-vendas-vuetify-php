@@ -1,35 +1,75 @@
 <template>
   <async-container :loading="loading">
     <v-card width="64rem" class="mx-auto mb-4">
-      <v-card-title>{{ id ? 'Venda Nº' + id : 'Registrar Venda' }}</v-card-title>
+      <v-card-title class="justify-space-between">
+        {{ id ? 'Venda Nº' + id : 'Registrar Venda' }}
+        <v-menu left bottom offset-y class="d-print-none" v-if="rfidDisponivel">
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn icon v-bind="attrs" v-on="on">
+              <v-icon>mdi-dots-vertical</v-icon>
+            </v-btn>
+          </template>
+          <v-list class="py-0" dense>
+            <v-list-item @click="dialogRfid = true">
+              <v-list-item-icon>
+                <v-icon>mdi-contactless-payment-circle</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>Vincular RFID</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+      </v-card-title>
       <v-card-subtitle v-if="!!criado_em">Criado em {{ moment(criado_em).format('DD/MM/YYYY HH:mm') }}</v-card-subtitle>
       <v-card-text>
-        <v-text-field
-          label="Cliente"
-          v-model="iptCliente"
-          :disabled="enviandoVenda"
-          :readonly="!!cadastro || !!iptClienteId"
-          placeholder="Nome do cliente"
-          persistent-placeholder
-          :append-outer-icon="cadastro ? undefined : 'mdi-account-search'"
-          @click:append-outer="dialogPesquisarCadastro = true"
-          @keydown="(x) => {if (x.code === 'F2' && !cadastro) dialogPesquisarCadastro = true}"
-          @click:clear="desvincularCadastro"
-          :clearable="!cadastro"
-          :autofocus="$vuetify.breakpoint.mdAndUp"
-          outlined
-          dense
-        ></v-text-field>
-        <v-text-field label="Nota" v-model="iptNota" outlined dense placeholder="Observações.."></v-text-field>
-        <text-field-monetary
-          label="Valor Pago"
-          v-model="iptCredito"
-          :disabled="enviandoVenda"
-          type="tel"
-          prefix="R$"
-          outlined
-          dense
-        ></text-field-monetary>
+        <v-form @submit.prevent :disabled="enviandoVenda">
+          <v-row dense>
+            <v-col cols="4" sm="3" md="2">
+              <v-text-field
+                label="Cod. Cliente"
+                :value="cadastro || iptClienteId"
+                :hint="cadastro || iptClienteId ? '' : 'Não possui'"
+                persistent-placeholder
+                placeholder="N/P"
+                persistent-hint
+                outlined
+                dense
+                disabled
+              ></v-text-field>
+            </v-col>
+            <v-col cols="8" sm="9" md="10">
+              <v-text-field
+                label="Cliente"
+                v-model="iptCliente"
+                :readonly="!!cadastro || !!iptClienteId"
+                placeholder="Nome do cliente"
+                persistent-placeholder
+                :append-outer-icon="cadastro ? undefined : 'mdi-account-search'"
+                @click:append-outer="dialogPesquisarCadastro = true"
+                @keydown="(x) => {if (x.code === 'F2' && !cadastro) dialogPesquisarCadastro = true}"
+                :hint="$vuetify.breakpoint.mdAndUp && !cadastro ? 'Pressione F2 para buscar um cliente cadastrado' : undefined"
+                @click:clear="desvincularCadastro"
+                :clearable="!cadastro"
+                :autofocus="$vuetify.breakpoint.mdAndUp"
+                outlined
+                dense
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-text-field label="Nota" v-model="iptNota" class="mt-2" outlined dense placeholder="Nenhuma observação" persistent-placeholder></v-text-field>
+          <text-field-monetary
+            label="Valor Pago"
+            v-model="iptCredito"
+            type="tel"
+            prefix="R$"
+            outlined
+            dense
+            :hint="(valorTotal > 0 && iptCredito < valorTotal) ? 'Falta pagar R$ ' + formatoMonetario(valorTotal - iptCredito) : undefined"
+            persistent-hint
+            :success="!!valorTotal && !!iptCredito && valorTotal <= iptCredito"
+          ></text-field-monetary>
+        </v-form>
       </v-card-text>
     </v-card>
     <v-card width="64rem" class="mx-auto">
@@ -61,6 +101,7 @@
           item-value="id"
           item-text="nome"
           no-data-text="Nenhum produto correspondente"
+          placeholder="Nome ou código do produto"
           prepend-inner-icon="mdi-plus-circle"
           :disabled="enviandoVenda"
           :filter="iptProdutoFiltro"
@@ -104,7 +145,7 @@
         </template>
         <template v-slot:[`item.valor`]="{item}">
           <v-edit-dialog :return-value.sync="item.valor">
-            <span style="white-space: nowrap">R$ {{ item.valor ? parseFloat(item.valor).toFixed(2) : '0.00' }}</span>
+            <span style="white-space: nowrap">R$ {{ item.valor ? formatoMonetario(item.valor) : '0,00' }}</span>
             <template v-slot:input>
               <v-text-field
                 prefix="R$"
@@ -127,7 +168,7 @@
             </td>
             <td></td>
             <td>
-              <p class="subtitle-2 primary--text mb-0">R$ {{ valorTotal.toFixed(2) }}</p>
+              <p class="subtitle-2 primary--text mb-0">R$ {{ formatoMonetario(valorTotal) }}</p>
             </td>
             <td></td>
           </tr>
@@ -143,14 +184,19 @@
     <v-dialog v-model="dialogPesquisarCadastro" width="40rem">
       <v-card>
         <v-card-title>Pesquisar Cliente</v-card-title>
-        <v-card-text>
+        <v-card-text class="px-3">
+          <p class="subtitle-2 blue--text">
+            <v-icon>{{ $vuetify.breakpoint.xs ? 'mdi-gesture-tap' : 'mdi-cursor-default-click' }}</v-icon>
+            Clique no cliente desejado da lista
+          </p>
           <v-text-field
-            label="Pesquisar"
+            label="Filtrar"
             prepend-inner-icon="mdi-magnify"
             v-model="tableCadastrosSearch"
             @keydown="(x) => {if (x.code === 'F2') pesquisarCadastroPorDigital()}"
             :autofocus="$vuetify.breakpoint.mdAndUp"
-            hide-details dense outlined
+            placeholder="Nome ou código"
+            persistent-placeholder hide-details dense outlined
           >
             <template v-slot:append-outer>
               <v-btn color="primary" small @click="pesquisarCadastroPorDigital" v-if="existeCadastroComDigital && biometriaDisponivel">
@@ -159,6 +205,7 @@
             </template>
           </v-text-field>
         </v-card-text>
+        <v-divider class="mb-1"></v-divider>
         <v-data-table
           :headers="tableCadastrosHeaders"
           :items="tableCadastrosItems"
@@ -166,11 +213,39 @@
           :loading="tableCadastrosLoading"
           :footer-props="{'items-per-page-options': [5, 10, 15]}"
           :mobile-breakpoint="0"
-          sort-by="id"
-          sort-desc
-          dense
+          no-data-text="Nenhum cliente cadastrado"
+          no-results-text="Nenhum cliente encontrado"
+          sort-by="nome"
           @click:row="selecionarCadastro"
         ></v-data-table>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="dialogRfid" width="24rem" :persistent="vinculandoRfid">
+      <v-card>
+        <v-form @submit.prevent="vincularRfid" :disabled="vinculandoRfid || !id">
+          <v-card-text class="pb-0">
+            <v-alert type="error" v-if="!id">Você precisa gravar a venda primeiro!</v-alert>
+            <div class="text-center mb-3">
+              <v-avatar color="primary" size="96">
+                <v-icon size="64" color="white">mdi-contactless-payment</v-icon>
+              </v-avatar>
+            </div>
+            <p class="text-center title">Vincular dispositivo de aproximação</p>
+            <v-text-field
+              label="Identificador RFID"
+              prepend-inner-icon="mdi-contactless-payment"
+              placeholder="Encoste o dispositivo no sensor"
+              hint="Aproxime!"
+              v-model="iptRfid"
+              outlined
+              dense
+              autofocus
+            ></v-text-field>
+          </v-card-text>
+          <v-card-actions class="justify-center">
+            <v-btn color="secondary" small depressed @click="dialogRfid = false" :loading="vinculandoRfid">Fechar</v-btn>
+          </v-card-actions>
+        </v-form>
       </v-card>
     </v-dialog>
     <loading-dialog v-model="dialogLoading" :text="dialogLoadingText" width="400"></loading-dialog>
@@ -184,6 +259,8 @@ import AsyncContainer from '@/components/AsyncContainer';
 import BiometriaNitgen from '@/http/BiometriaNitgen';
 import TextFieldMonetary from '@/components/TextFieldMonetary';
 import LoadingDialog from '@/components/LoadingDialog';
+import StringHelper from '@/helper/StringHelper';
+import {config} from '@/config';
 export default {
   name: 'VendaFormulario',
   props: {
@@ -212,10 +289,11 @@ export default {
     tableDense: false,
     enviandoVenda: false,
     dialogPesquisarCadastro: false,
-    biometriaDisponivel: false,
+    biometriaDisponivel: config.biometria,
+    rfidDisponivel: config.rfid,
     tableCadastrosHeaders: [
-      {value: 'id', text: 'COD.', width: '6rem'},
-      {value: 'nome', text: 'NOME'},
+      {value: 'id', text: 'COD.', width: '6rem', cellClass: 'cursor-pointer'},
+      {value: 'nome', text: 'NOME', cellClass: 'cursor-pointer text-no-wrap'},
     ],
     tableCadastrosItems: [],
     tableCadastrosSearch: '',
@@ -223,6 +301,9 @@ export default {
     dialogLoading: false,
     dialogLoadingText: '',
     itemsRemover: [],
+    dialogRfid: false,
+    iptRfid: '',
+    vinculandoRfid: false,
   }),
   computed: {
     valorTotal() {
@@ -238,6 +319,7 @@ export default {
         if (spinner) this.loading = true;
         const webclient = http();
         const {data} = await webclient.get('produtos');
+        this.iptProdutoItems = data;
         if (this.id) {
           const {data} = await webclient.get(`vendas?id=${this.id}`);
           this.cadastro = data.cadastro;
@@ -254,7 +336,6 @@ export default {
           this.iptCredito = '0';
           this.tableItems = [];
         }
-        this.iptProdutoItems = data;
       } catch (e) {
         await this.$router.push('/');
       } finally {
@@ -265,8 +346,7 @@ export default {
       this.tableCadastrosLoading = true;
       const webclient = http();
       const {data} = await webclient.get('clientes');
-      this.biometriaDisponivel = data.biometria_nitgen;
-      this.tableCadastrosItems = data.dados;
+      this.tableCadastrosItems = data;
       this.tableCadastrosLoading = false;
     },
     async salvarVenda() {
@@ -284,8 +364,8 @@ export default {
         };
         await webclient.post('vendas', payload);
 
-        if (this.id) this.$store.commit('showSnackbar', {color: 'success', text: 'Venda atualizada'});
-        else this.$store.commit('showSnackbar', {color: 'success', text: 'Venda registrada'});
+        if (this.id) this.$store.commit('showSnackbar', {color: 'success', text: 'Venda atualizada!'});
+        else this.$store.commit('showSnackbar', {color: 'success', text: 'Venda registrada!'});
 
         await this.$router.push('/vendas');
       } finally {
@@ -311,7 +391,7 @@ export default {
       try {
         const cadastros = this.tableCadastrosItems.filter(i => !!i.digital).map(i => ({id: i.id, digital: i.digital}));
         this.dialogLoading = true;
-        this.dialogLoadingText = 'Enviando todas as biometrias para a memória..';
+        this.dialogLoadingText = 'Carregando todas as biometrias na memória..';
         const resultado = await biometriaNitgen.identificar(cadastros);
         if (resultado === 0) alert('Nenhum cadastro pôde ser encontrado com esta digital escaneada.');
         else if (resultado > 0) {
@@ -334,8 +414,31 @@ export default {
         const index = this.tableItems.findIndex(i => i.produto === item.produto);
         this.tableItems.splice(index, 1);
       }
-      console.log(item);
     },
+    formatoMonetario(valor) {
+      return StringHelper.monetaryFormat(valor);
+    },
+    async vincularRfid() {
+      if (!this.rfidDisponivel || !this.iptRfid) return;
+      this.vinculandoRfid = true;
+      try {
+        const webclient = http();
+        const {data} = await webclient.get(`venda_rfids?rfid=${this.iptRfid}`);
+        if (data && data.venda !== Number(this.id)) {
+          const duracao = this.moment.duration(this.moment().diff(this.moment(data.criado_em))).humanize();
+          const clienteStr = data.cliente ? ` do cliente "${data.cliente}"` : '';
+          const txt = `Atenção!\nO dispositivo apresentado está atualmente vinculado uma venda${clienteStr} a aproximadamente ${duracao} atrás.\nSe você continuar irá DESVINCULAR daquela venda, tem certeza?`;
+          if (window.confirm(txt)) await webclient.delete(`venda_rfids?rfid=${this.iptRfid}`);
+          else return;
+        }
+        const {data: r} = await webclient.post('venda_rfids', {rfid: this.iptRfid, venda: this.id});
+        if (r.mensagem) this.$store.commit('showSnackbar', {color: 'warning', text: r.mensagem});
+        else this.$store.commit('showSnackbar', {color: 'success', text: 'Dispositivo vinculado!'});
+      } finally {
+        this.dialogRfid = false;
+        this.vinculandoRfid = false;
+      }
+    }
   },
   created() {
     this.loadData();
@@ -361,7 +464,10 @@ export default {
     },
     dialogPesquisarCadastro(v) {
       if (v && this.tableCadastrosItems.length === 0) this.loadCadastros();
-    }
+    },
+    dialogRfid(v) {
+      if (!v) this.iptRfid = '';
+    },
   }
 }
 </script>

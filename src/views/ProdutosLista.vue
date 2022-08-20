@@ -67,8 +67,8 @@
           <v-card-title>{{ iptId ? 'Editar' : 'Criar' }} produto</v-card-title>
           <v-card-text>
             <v-text-field label="Nome" v-model="iptNome" outlined dense :rules="[v => (!!v && !!v.trim()) || 'Coloque o nome']"></v-text-field>
-            <v-text-field label="Codigo" v-model="iptCodigo" outlined dense hint="O código é opcional, mas facilita adicionar na venda." persistent-hint></v-text-field>
-            <text-field-monetary label="Valor" v-model="iptValor" prefix="R$" outlined dense></text-field-monetary>
+            <v-text-field label="Codigo" class="mt-2" v-model="iptCodigo" outlined dense hint="O código é opcional, mas facilita adicionar na venda." persistent-hint></v-text-field>
+            <text-field-monetary label="Valor" class="mt-2" v-model="iptValor" prefix="R$" outlined dense></text-field-monetary>
           </v-card-text>
           <v-card-actions class="justify-center">
             <v-btn color="secondary" small depressed :disabled="salvandoProduto" @click="dialogEditarProduto = false">
@@ -146,7 +146,7 @@ export default {
         await webclient.post('produtos', produto);
         await this.loadData();
         this.dialogEditarProduto = false;
-        this.$store.commit('showSnackbar', {color: 'success', text: 'Produto salvo'});
+        this.$store.commit('showSnackbar', {color: 'success', text: 'Produto salvo!'});
       } finally {
         this.salvandoProduto = false;
       }
@@ -158,7 +158,7 @@ export default {
         const webclient = http();
         await webclient.delete('produtos?id=' + item.id);
         await this.loadData();
-        this.$store.commit('showSnackbar', {color: 'primary', text: 'Produto apagado'});
+        this.$store.commit('showSnackbar', {color: 'primary', text: 'Produto apagado!'});
       } finally {
         this.deletandoProduto = false;
       }
