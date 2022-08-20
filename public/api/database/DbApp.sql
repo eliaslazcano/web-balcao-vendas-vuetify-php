@@ -51,6 +51,19 @@ create table cliente_enderecos
 			on update cascade on delete cascade
 );
 
+create table cliente_observacoes
+(
+	id int unsigned auto_increment
+		primary key,
+	cliente int unsigned not null,
+	observacao varchar(255) null,
+	criado_em datetime default current_timestamp() not null,
+	deletado_em datetime null,
+	constraint cliente_observacoes_clientes_id_fk
+		foreign key (cliente) references clientes (id)
+			on update cascade on delete cascade
+);
+
 create table cliente_telefones
 (
 	id int unsigned auto_increment
