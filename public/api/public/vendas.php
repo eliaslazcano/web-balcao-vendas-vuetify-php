@@ -17,7 +17,7 @@ if (HttpHelper::isGet()) {
   else {
     $data_inicio = HttpHelper::obterParametro('data_inicio') ?: '1900-01-01 00:00:00';
     $data_fim = HttpHelper::obterParametro('data_fim') ?: date('Y-m-d H:i:s');
-    $sql = 'SELECT v.id, COALESCE(c.nome, v.cliente) AS cliente, v.criado_em, SUM(vi.valor) AS debito, v.credito FROM vendas v LEFT JOIN clientes c ON v.cadastro = c.id LEFT JOIN venda_itens vi ON v.id = vi.venda WHERE v.deletado_em IS NULL AND v.criado_em BETWEEN :inicio AND :fim GROUP BY v.id';
+    $sql = 'SELECT v.id, COALESCE(c.nome, v.cliente) AS cliente, v.criado_em, COALESCE(SUM(vi.valor),0) AS debito, v.credito FROM vendas v LEFT JOIN clientes c ON v.cadastro = c.id LEFT JOIN venda_itens vi ON v.id = vi.venda WHERE v.deletado_em IS NULL AND v.criado_em BETWEEN :inicio AND :fim GROUP BY v.id';
     $x = $db->query($sql, [':inicio' => $data_inicio, ':fim' => $data_fim], ['id', 'debito', 'credito']);
   }
   HttpHelper::emitirJson($x);

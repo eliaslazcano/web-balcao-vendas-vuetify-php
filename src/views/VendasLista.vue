@@ -82,7 +82,8 @@
           <span v-else class="grey--text">SEM NOME</span>
         </template>
         <template v-slot:[`item.debito`]="{item}">
-          <span v-if="item.credito >= item.debito" class="success--text">R$ {{ formatoMonetario(item.credito) }}</span>
+          <span v-if="!item.debito && !item.credito" class="grey--text">R$ {{ formatoMonetario(item.credito) }}</span>
+          <span v-else-if="item.credito >= item.debito" class="success--text">R$ {{ formatoMonetario(item.credito) }}</span>
           <span v-else-if="item.credito > 0" class="warning--text">R$ {{ formatoMonetario(item.credito) }} / {{ formatoMonetario(item.debito) }}</span>
           <span v-else class="red--text">R$ {{ formatoMonetario(item.debito) }}</span>
         </template>

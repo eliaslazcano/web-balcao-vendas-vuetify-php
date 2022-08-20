@@ -94,6 +94,15 @@
 
           <v-tooltip bottom>
             <template v-slot:activator="{ on, attrs }">
+              <v-btn color="deep-purple" small icon v-bind="attrs" v-on="on" @click="visualizarObservacoes(item.id)">
+                <v-icon>mdi-comment-text</v-icon>
+              </v-btn>
+            </template>
+            <span>Observações</span>
+          </v-tooltip>
+
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on, attrs }">
               <v-btn color="red" small icon v-bind="attrs" v-on="on" @click="deletarCadastro(item)" :disabled="deletandoCadastro">
                 <v-icon>mdi-delete</v-icon>
               </v-btn>
@@ -152,9 +161,9 @@
       <v-card>
         <v-card-title>Endereços</v-card-title>
         <v-data-table
-          :headers="tableEnderecosHeaders"
-          :items="tableEnderecosItems"
-          :loading="tableEnderecosLoading"
+          :headers="tableGenericHeaders"
+          :items="tableGenericItems"
+          :loading="tableGenericLoading"
           no-data-text="Nenhum endereço cadastrado"
           sort-by="criado_em"
           sort-desc
@@ -172,7 +181,7 @@
         <v-card-actions class="justify-center">
           <v-btn color="secondary" small depressed @click="dialogEnderecos = false">Fechar</v-btn>
           <v-btn color="success" small depressed @click="dialogCadastrarEndereco = true">
-            <v-icon dense class="mr-1">mdi-plus-circle</v-icon> Cadastrar
+            <v-icon small class="mr-1">mdi-plus-circle</v-icon> Cadastrar
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -181,9 +190,9 @@
       <v-card>
         <v-card-title>Emails</v-card-title>
         <v-data-table
-          :headers="tableEmailsHeaders"
-          :items="tableEmailsItems"
-          :loading="tableEmailsLoading"
+          :headers="tableGenericHeaders"
+          :items="tableGenericItems"
+          :loading="tableGenericLoading"
           no-data-text="Nenhum e-mail cadastrado"
           sort-by="criado_em"
           sort-desc
@@ -201,7 +210,36 @@
         <v-card-actions class="justify-center">
           <v-btn color="secondary" small depressed @click="dialogEmails = false">Fechar</v-btn>
           <v-btn color="success" small depressed @click="cadastrarEmail">
-            <v-icon dense class="mr-1">mdi-plus-circle</v-icon> Cadastrar
+            <v-icon small class="mr-1">mdi-plus-circle</v-icon> Cadastrar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="dialogObservacoes" width="64rem">
+      <v-card>
+        <v-card-title>Observações</v-card-title>
+        <v-data-table
+          :headers="tableGenericHeaders"
+          :items="tableGenericItems"
+          :loading="tableGenericLoading"
+          no-data-text="Nenhuma observação encontrada"
+          sort-by="criado_em"
+          sort-desc
+        >
+          <template v-slot:[`item.criado_em`]="{item}">
+            <span v-if="item.criado_em">{{ moment(item.criado_em).format('DD/MM/YYYY HH:mm') }}</span>
+            <span v-else class="grey--text">NÃO POSSUI</span>
+          </template>
+          <template v-slot:[`item.acoes`]="{item}">
+            <v-btn color="red" small icon @click="excluirObservacao(item.id)">
+              <v-icon>mdi-delete</v-icon>
+            </v-btn>
+          </template>
+        </v-data-table>
+        <v-card-actions class="justify-center">
+          <v-btn color="secondary" small depressed @click="dialogObservacoes = false">Fechar</v-btn>
+          <v-btn color="success" small depressed @click="cadastrarObservacao">
+            <v-icon small class="mr-1">mdi-plus-circle</v-icon> Cadastrar
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -261,25 +299,11 @@ export default {
     dialogLoading: false,
     dialogLoadingText: '',
     dialogEnderecos: false,
-    tableEnderecosHeaders: [
-      {value: 'criado_em', text: 'DATA'},
-      {value: 'cep', text: 'CEP', sortable: false},
-      {value: 'uf', text: 'UF', sortable: false},
-      {value: 'cidade', text: 'CIDADE', sortable: false},
-      {value: 'bairro', text: 'BAIRRO', sortable: false},
-      {value: 'logradouro', text: 'LOGRADOURO', sortable: false},
-      {value: 'acoes', text: 'EXCLUIR', width: '9.2rem', align: 'center', sortable: false},
-    ],
-    tableEnderecosItems: [],
-    tableEnderecosLoading: false,
     dialogEmails: false,
-    tableEmailsHeaders: [
-      {value: 'criado_em', text: 'DATA', width: '9.2rem'},
-      {value: 'email', text: 'E-MAIL', sortable: false},
-      {value: 'acoes', text: 'EXCLUIR', width: '9.2rem', align: 'center', sortable: false},
-    ],
-    tableEmailsItems: [],
-    tableEmailsLoading: false,
+    dialogObservacoes: false,
+    tableGenericHeaders: [],
+    tableGenericItems: [],
+    tableGenericLoading: false,
     dialogCadastrarEndereco: false,
     dialogCadastrarEnderecoLoading: false,
     iptCep: '',
@@ -386,33 +410,67 @@ export default {
       }
     },
     async visualizarEnderecos(idCliente) {
-      this.tableEnderecosItems = [];
-      this.tableEnderecosLoading = true;
+      this.tableGenericHeaders = [
+        {value: 'criado_em', text: 'DATA'},
+        {value: 'cep', text: 'CEP', sortable: false},
+        {value: 'uf', text: 'UF', sortable: false},
+        {value: 'cidade', text: 'CIDADE', sortable: false},
+        {value: 'bairro', text: 'BAIRRO', sortable: false},
+        {value: 'logradouro', text: 'LOGRADOURO', sortable: false},
+        {value: 'acoes', text: 'EXCLUIR', width: '9.2rem', align: 'center', sortable: false},
+      ];
+      this.tableGenericItems = [];
+      this.tableGenericLoading = true;
       this.dialogEnderecos = true;
       this.iptId = idCliente;
       try {
         const webclient = http();
         const {data} = await webclient.get(`clientes/enderecos?cadastro=${idCliente}`);
-        this.tableEnderecosItems = data;
+        this.tableGenericItems = data;
       } catch (e) {
         this.dialogEnderecos = false;
       } finally {
-        this.tableEnderecosLoading = false;
+        this.tableGenericLoading = false;
       }
     },
     async visualizarEmails(idCliente) {
-      this.tableEmailsItems = [];
-      this.tableEmailsLoading = true;
+      this.tableGenericHeaders = [
+        {value: 'criado_em', text: 'DATA', cellClass: 'text-no-wrap'},
+        {value: 'email', text: 'E-MAIL', cellClass: 'text-no-wrap', sortable: false},
+        {value: 'acoes', text: 'EXCLUIR', cellClass: 'text-no-wrap', sortable: false, align: 'center'},
+      ];
+      this.tableGenericItems = [];
+      this.tableGenericLoading = true;
       this.dialogEmails = true;
       this.iptId = idCliente;
       try {
         const webclient = http();
         const {data} = await webclient.get(`clientes/emails?cadastro=${idCliente}`);
-        this.tableEmailsItems = data;
+        this.tableGenericItems = data;
       } catch (e) {
         this.dialogEmails = false;
       } finally {
-        this.tableEmailsLoading = false;
+        this.tableGenericLoading = false;
+      }
+    },
+    async visualizarObservacoes(idCliente) {
+      this.tableGenericHeaders = [
+        {value: 'criado_em', text: 'DATA', cellClass: 'text-no-wrap'},
+        {value: 'observacao', text: 'TEXTO', sortable: false, filterable: false},
+        {value: 'acoes', text: 'AÇÕES', cellClass: 'text-no-wrap', sortable: false, filterable: false},
+      ];
+      this.tableGenericItems = [];
+      this.tableGenericLoading = true;
+      this.dialogObservacoes = true;
+      this.iptId = idCliente;
+      try {
+        const webclient = http();
+        const {data} = await webclient.get(`clientes/observacoes?cadastro=${idCliente}`);
+        this.tableGenericItems = data;
+      } catch (e) {
+        this.dialogObservacoes = false;
+      } finally {
+        this.tableGenericLoading = false;
       }
     },
     async excluirEndereco(idEndereco) {
@@ -420,14 +478,21 @@ export default {
       const webclient = http();
       await webclient.delete(`clientes/enderecos?id=${idEndereco}`);
       const {data} = await webclient.get(`clientes/enderecos?cadastro=${this.iptId}`);
-      this.tableEnderecosItems = data;
+      this.tableGenericItems = data;
     },
     async excluirEmail(idEmail) {
       if (!confirm(`Tem certeza que vai apagar o email?`)) return;
       const webclient = http();
       await webclient.delete(`clientes/emails?id=${idEmail}`);
       const {data} = await webclient.get(`clientes/emails?cadastro=${this.iptId}`);
-      this.tableEmailsItems = data;
+      this.tableGenericItems = data;
+    },
+    async excluirObservacao(idObservacao) {
+      if (!confirm(`Tem certeza que vai apagar a observação?`)) return;
+      const webclient = http();
+      await webclient.delete(`clientes/observacoes?id=${idObservacao}`);
+      const {data} = await webclient.get(`clientes/observacoes?cadastro=${this.iptId}`);
+      this.tableGenericItems = data;
     },
     async cadastrarEmail() {
       const email = prompt('Digite o endereço de e-mail');
@@ -436,12 +501,15 @@ export default {
         this.$store.commit('showSnackbar', {color: 'error', text: 'E-mail inválido'});
         return;
       }
-      const webclient = http();
-      await webclient.post('clientes/emails', {cadastro: this.iptId, email: email.trim().toLowerCase()})
-        .then(async () => {
-          const {data} = await webclient.get(`clientes/emails?cadastro=${this.iptId}`);
-          this.tableEmailsItems = data;
-        });
+      this.tableGenericLoading = true;
+      try {
+        const webclient = http();
+        await webclient.post('clientes/emails', {cadastro: this.iptId, email: email.trim().toLowerCase()})
+        const {data} = await webclient.get(`clientes/emails?cadastro=${this.iptId}`);
+        this.tableGenericItems = data;
+      } finally {
+        this.tableGenericLoading = false;
+      }
     },
     async cadastrarEndereco() {
       if (!this.$refs['form-endereco'].validate()) return;
@@ -458,12 +526,25 @@ export default {
         const webclient = http();
         await webclient.post('clientes/enderecos', dados);
         const {data} = await webclient.get(`clientes/enderecos?cadastro=${this.iptId}`);
-        this.tableEnderecosItems = data;
+        this.tableGenericItems = data;
         this.dialogCadastrarEndereco = false;
       } finally {
         this.dialogCadastrarEnderecoLoading = false;
       }
-    }
+    },
+    async cadastrarObservacao() {
+      const texto = prompt('Digite sua observação');
+      if (!texto || texto.trim().length === 0) return;
+      this.tableGenericLoading = true;
+      try {
+        const webclient = http();
+        await webclient.post('clientes/observacoes', {cadastro: this.iptId, observacao: texto.trim()});
+        const {data} = await webclient.get(`clientes/observacoes?cadastro=${this.iptId}`);
+        this.tableGenericItems = data;
+      } finally {
+        this.tableGenericLoading = false;
+      }
+    },
   },
   computed: {
     existeCadastroComDigital() {
