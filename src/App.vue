@@ -118,40 +118,22 @@
 </template>
 
 <script>
-import http from '@/plugins/axios';
+import {config} from '@/config';
 export default {
   name: 'App',
   data: () => ({
     mostrarMenu: null,
-    nome_empresa: null,
+    nome_empresa: config.nome_empresa,
   }),
   methods: {
     changeDarkMode() {
       this.$vuetify.theme.dark = !this.$vuetify.theme.dark;
       localStorage.setItem('darkmode', this.$vuetify.theme.dark ? '1' : '0');
     },
-    carregarConfiguracoesGlobais() {
-      const cache = sessionStorage.getItem('configuracoes');
-      if (cache) {
-        const configuracoes = JSON.parse(cache);
-        this.nome_empresa = configuracoes.nome_empresa;
-      } else {
-        const webclient = http();
-        webclient.get('configuracoes')
-          .then(r => {
-            if (r.data) {
-              sessionStorage.setItem('configuracoes', JSON.stringify(r.data));
-              if (r.data.nome_empresa) this.nome_empresa = r.data.nome_empresa;
-            }
-          });
-      }
-    },
   },
   created() {
     const darkmode = localStorage.getItem('darkmode');
     if (darkmode != null) this.$vuetify.theme.dark = darkmode === '1';
-
-    this.carregarConfiguracoesGlobais();
   },
 };
 </script>

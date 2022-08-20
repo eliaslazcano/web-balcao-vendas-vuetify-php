@@ -1,7 +1,26 @@
 <template>
   <async-container :loading="loading">
     <v-card width="64rem" class="mx-auto mb-4">
-      <v-card-title>{{ id ? 'Venda Nº' + id : 'Registrar Venda' }}</v-card-title>
+      <v-card-title class="justify-space-between">
+        {{ id ? 'Venda Nº' + id : 'Registrar Venda' }}
+        <v-menu left bottom offset-y class="d-print-none" v-if="rfidDisponivel">
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn icon v-bind="attrs" v-on="on">
+              <v-icon>mdi-dots-vertical</v-icon>
+            </v-btn>
+          </template>
+          <v-list class="py-0" dense>
+            <v-list-item @click="dialogRfid = true">
+              <v-list-item-icon>
+                <v-icon>mdi-contactless-payment-circle</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>Vincular RFID</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+      </v-card-title>
       <v-card-subtitle v-if="!!criado_em">Criado em {{ moment(criado_em).format('DD/MM/YYYY HH:mm') }}</v-card-subtitle>
       <v-card-text>
         <v-form @submit.prevent :disabled="enviandoVenda">
@@ -29,7 +48,7 @@
                 :append-outer-icon="cadastro ? undefined : 'mdi-account-search'"
                 @click:append-outer="dialogPesquisarCadastro = true"
                 @keydown="(x) => {if (x.code === 'F2' && !cadastro) dialogPesquisarCadastro = true}"
-                :hint="$vuetify.breakpoint.mdAndUp && !cadastro ? 'Aperte F2 para buscar um cliente cadastrado' : undefined"
+                :hint="$vuetify.breakpoint.mdAndUp && !cadastro ? 'Pressione F2 para buscar um cliente cadastrado' : undefined"
                 @click:clear="desvincularCadastro"
                 :clearable="!cadastro"
                 :autofocus="$vuetify.breakpoint.mdAndUp"
@@ -201,6 +220,34 @@
         ></v-data-table>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="dialogRfid" width="24rem" :persistent="vinculandoRfid">
+      <v-card>
+        <v-form @submit.prevent="vincularRfid" :disabled="vinculandoRfid || !id">
+          <v-card-text class="pb-0">
+            <v-alert type="error" v-if="!id">Você precisa gravar a venda primeiro!</v-alert>
+            <div class="text-center mb-3">
+              <v-avatar color="primary" size="96">
+                <v-icon size="64" color="white">mdi-contactless-payment</v-icon>
+              </v-avatar>
+            </div>
+            <p class="text-center title">Vincular dispositivo de aproximação</p>
+            <v-text-field
+              label="Identificador RFID"
+              prepend-inner-icon="mdi-contactless-payment"
+              placeholder="Encoste o dispositivo no sensor"
+              hint="Aproxime!"
+              v-model="iptRfid"
+              outlined
+              dense
+              autofocus
+            ></v-text-field>
+          </v-card-text>
+          <v-card-actions class="justify-center">
+            <v-btn color="secondary" small depressed @click="dialogRfid = false" :loading="vinculandoRfid">Fechar</v-btn>
+          </v-card-actions>
+        </v-form>
+      </v-card>
+    </v-dialog>
     <loading-dialog v-model="dialogLoading" :text="dialogLoadingText" width="400"></loading-dialog>
   </async-container>
 </template>
@@ -213,6 +260,7 @@ import BiometriaNitgen from '@/http/BiometriaNitgen';
 import TextFieldMonetary from '@/components/TextFieldMonetary';
 import LoadingDialog from '@/components/LoadingDialog';
 import StringHelper from '@/helper/StringHelper';
+import {config} from '@/config';
 export default {
   name: 'VendaFormulario',
   props: {
@@ -241,7 +289,8 @@ export default {
     tableDense: false,
     enviandoVenda: false,
     dialogPesquisarCadastro: false,
-    biometriaDisponivel: false,
+    biometriaDisponivel: config.biometria,
+    rfidDisponivel: config.rfid,
     tableCadastrosHeaders: [
       {value: 'id', text: 'COD.', width: '6rem', cellClass: 'cursor-pointer'},
       {value: 'nome', text: 'NOME', cellClass: 'cursor-pointer text-no-wrap'},
@@ -252,6 +301,9 @@ export default {
     dialogLoading: false,
     dialogLoadingText: '',
     itemsRemover: [],
+    dialogRfid: false,
+    iptRfid: '',
+    vinculandoRfid: false,
   }),
   computed: {
     valorTotal() {
@@ -267,6 +319,7 @@ export default {
         if (spinner) this.loading = true;
         const webclient = http();
         const {data} = await webclient.get('produtos');
+        this.iptProdutoItems = data;
         if (this.id) {
           const {data} = await webclient.get(`vendas?id=${this.id}`);
           this.cadastro = data.cadastro;
@@ -283,7 +336,6 @@ export default {
           this.iptCredito = '0';
           this.tableItems = [];
         }
-        this.iptProdutoItems = data;
       } catch (e) {
         await this.$router.push('/');
       } finally {
@@ -294,8 +346,7 @@ export default {
       this.tableCadastrosLoading = true;
       const webclient = http();
       const {data} = await webclient.get('clientes');
-      this.biometriaDisponivel = data.biometria_nitgen;
-      this.tableCadastrosItems = data.dados;
+      this.tableCadastrosItems = data;
       this.tableCadastrosLoading = false;
     },
     async salvarVenda() {
@@ -313,8 +364,8 @@ export default {
         };
         await webclient.post('vendas', payload);
 
-        if (this.id) this.$store.commit('showSnackbar', {color: 'success', text: 'Venda atualizada'});
-        else this.$store.commit('showSnackbar', {color: 'success', text: 'Venda registrada'});
+        if (this.id) this.$store.commit('showSnackbar', {color: 'success', text: 'Venda atualizada!'});
+        else this.$store.commit('showSnackbar', {color: 'success', text: 'Venda registrada!'});
 
         await this.$router.push('/vendas');
       } finally {
@@ -340,7 +391,7 @@ export default {
       try {
         const cadastros = this.tableCadastrosItems.filter(i => !!i.digital).map(i => ({id: i.id, digital: i.digital}));
         this.dialogLoading = true;
-        this.dialogLoadingText = 'Enviando todas as biometrias para a memória..';
+        this.dialogLoadingText = 'Carregando todas as biometrias na memória..';
         const resultado = await biometriaNitgen.identificar(cadastros);
         if (resultado === 0) alert('Nenhum cadastro pôde ser encontrado com esta digital escaneada.');
         else if (resultado > 0) {
@@ -363,11 +414,31 @@ export default {
         const index = this.tableItems.findIndex(i => i.produto === item.produto);
         this.tableItems.splice(index, 1);
       }
-      console.log(item);
     },
     formatoMonetario(valor) {
       return StringHelper.monetaryFormat(valor);
     },
+    async vincularRfid() {
+      if (!this.rfidDisponivel || !this.iptRfid) return;
+      this.vinculandoRfid = true;
+      try {
+        const webclient = http();
+        const {data} = await webclient.get(`venda_rfids?rfid=${this.iptRfid}`);
+        if (data && data.venda !== Number(this.id)) {
+          const duracao = this.moment.duration(this.moment().diff(this.moment(data.criado_em))).humanize();
+          const clienteStr = data.cliente ? ` do cliente "${data.cliente}"` : '';
+          const txt = `Atenção!\nO dispositivo apresentado está atualmente vinculado uma venda${clienteStr} a aproximadamente ${duracao} atrás.\nSe você continuar irá DESVINCULAR daquela venda, tem certeza?`;
+          if (window.confirm(txt)) await webclient.delete(`venda_rfids?rfid=${this.iptRfid}`);
+          else return;
+        }
+        const {data: r} = await webclient.post('venda_rfids', {rfid: this.iptRfid, venda: this.id});
+        if (r.mensagem) this.$store.commit('showSnackbar', {color: 'warning', text: r.mensagem});
+        else this.$store.commit('showSnackbar', {color: 'success', text: 'Dispositivo vinculado!'});
+      } finally {
+        this.dialogRfid = false;
+        this.vinculandoRfid = false;
+      }
+    }
   },
   created() {
     this.loadData();
@@ -393,7 +464,10 @@ export default {
     },
     dialogPesquisarCadastro(v) {
       if (v && this.tableCadastrosItems.length === 0) this.loadCadastros();
-    }
+    },
+    dialogRfid(v) {
+      if (!v) this.iptRfid = '';
+    },
   }
 }
 </script>

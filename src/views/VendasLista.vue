@@ -48,7 +48,20 @@
             </v-col>
           </v-row>
         </v-slide-y-transition>
-        <v-text-field label="Pesquisar" prepend-inner-icon="mdi-magnify" v-model="tableSearch" hide-details :autofocus="$vuetify.breakpoint.mdAndUp"></v-text-field>
+        <v-text-field
+          label="Pesquisar"
+          prepend-inner-icon="mdi-magnify"
+          v-model="tableSearch"
+          :autofocus="$vuetify.breakpoint.mdAndUp"
+          :hint="$vuetify.breakpoint.mdAndUp && rfid_disponivel ? 'Pressione F2 para buscar por aproximação' : undefined"
+          @keydown="(x) => {if (rfid_disponivel && x.code === 'F2') dialogRfid = true}"
+        >
+          <template v-slot:append-outer>
+            <v-btn color="primary" small @click="dialogRfid = true" v-if="rfid_disponivel">
+              <v-icon>mdi-contactless-payment</v-icon>
+            </v-btn>
+          </template>
+        </v-text-field>
       </v-card-text>
       <v-data-table
         :headers="tableHeaders"
@@ -83,6 +96,33 @@
     <v-btn color="success" fab fixed right bottom to="/venda">
       <v-icon>mdi-plus</v-icon>
     </v-btn>
+    <v-dialog v-model="dialogRfid" width="24rem" :persistent="buscandoRfid">
+      <v-card>
+        <v-form @submit.prevent="buscarRfid" :disabled="buscandoRfid">
+          <v-card-text class="pb-0">
+            <div class="text-center mb-3">
+              <v-avatar color="primary" size="96">
+                <v-icon size="64" color="white">mdi-contactless-payment</v-icon>
+              </v-avatar>
+            </div>
+            <p class="text-center title">Consulta por aproximação</p>
+            <v-text-field
+              label="Identificador RFID"
+              prepend-inner-icon="mdi-contactless-payment"
+              placeholder="Encoste o dispositivo no sensor"
+              hint="Aproxime!"
+              v-model="iptRfid"
+              outlined
+              dense
+              autofocus
+            ></v-text-field>
+          </v-card-text>
+          <v-card-actions class="justify-center">
+            <v-btn color="secondary" small depressed @click="dialogRfid = false" :loading="buscandoRfid">Fechar</v-btn>
+          </v-card-actions>
+        </v-form>
+      </v-card>
+    </v-dialog>
   </async-container>
 </template>
 
@@ -92,6 +132,7 @@ import http from '@/plugins/axios';
 import StringHelper from '@/helper/StringHelper';
 import DatePickerBr from '@/components/DatePickerBr';
 import moment from '@/plugins/moment';
+import {config} from '@/config';
 export default {
   name: 'VendasLista',
   components: {DatePickerBr, AsyncContainer},
@@ -112,6 +153,10 @@ export default {
     iptDataInicial: moment().format('YYYY-01-01'),
     iptDataFinal: moment().format('YYYY-MM-DD'),
     iptFiltrarData: true,
+    rfid_disponivel: config.rfid,
+    dialogRfid: false,
+    buscandoRfid: false,
+    iptRfid: '',
   }),
   methods: {
     imprimir() {
@@ -132,6 +177,21 @@ export default {
     formatoMonetario(valor) {
       return StringHelper.monetaryFormat(valor);
     },
+    async buscarRfid() {
+      if (!this.rfid_disponivel || !this.iptRfid) return;
+      this.buscandoRfid = true;
+      try {
+        const webclient = http();
+        const {data} = await webclient.get(`venda_rfids?rfid=${this.iptRfid}`);
+        if (data && data.venda) {
+          await this.$router.push('/venda/' + data.venda);
+        }
+        else this.$store.commit('showSnackbar', {color: 'error', text: 'Nenhuma venda vinculada ao dispositivo!'});
+      } finally {
+        this.dialogRfid = false;
+        this.buscandoRfid = false;
+      }
+    },
   },
   async created() {
     try {
@@ -149,7 +209,10 @@ export default {
     },
     iptFiltrarData() {
       this.loadData();
-    }
+    },
+    dialogRfid(v) {
+      if (!v) this.iptRfid = '';
+    },
   },
 }
 </script>

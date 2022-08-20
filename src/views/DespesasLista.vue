@@ -204,7 +204,7 @@ export default {
         await webclient.post('despesas', {id: this.iptId, descricao: this.iptDescricao.trim().toUpperCase(), valor: this.iptValor, observacao: this.iptObservacao});
         await this.loadData();
         this.dialogEditar = false;
-        this.$store.commit('showSnackbar', {color: 'success', text: 'Despesa registrada'});
+        this.$store.commit('showSnackbar', {color: 'success', text: 'Despesa registrada!'});
       } finally {
         this.salvandoItem = false;
       }
@@ -217,7 +217,7 @@ export default {
         const webclient = http();
         await webclient.delete('despesas?id=' + item.id);
         await this.loadData();
-        this.$store.commit('showSnackbar', {color: 'primary', text: 'Despesa apagada'});
+        this.$store.commit('showSnackbar', {color: 'primary', text: 'Despesa apagada!'});
       } finally {
         this.deletandoItem = false;
       }

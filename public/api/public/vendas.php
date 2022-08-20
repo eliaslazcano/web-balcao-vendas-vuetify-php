@@ -3,7 +3,7 @@
 use App\Helper\HttpHelper;
 use App\Database\DbApp;
 
-HttpHelper::validarMetodos(['GET','POST']);
+HttpHelper::validarMetodos(['GET','POST','PUT']);
 $db = new DbApp();
 
 if (HttpHelper::isGet()) {

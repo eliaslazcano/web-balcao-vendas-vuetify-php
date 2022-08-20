@@ -13,11 +13,7 @@ if (HttpHelper::isGet()) {
   } else {
     $x = $db->query('SELECT id, nome, digital, criado_em FROM clientes WHERE deletado_em IS NULL ORDER BY nome', [], ['id']);
   }
-  $configuracao = $db->queryPrimeiraLinha('SELECT biometria_nitgen FROM configuracoes ORDER BY id DESC LIMIT 1', [], [], ['biometria_nitgen']);
-  HttpHelper::emitirJson([
-    'biometria_nitgen' => $configuracao ? $configuracao['biometria_nitgen'] : false,
-    'dados' => $x,
-  ]);
+  HttpHelper::emitirJson($x);
 } elseif (HttpHelper::isPost()) {
   $id = HttpHelper::obterParametro('id');
   $nome = HttpHelper::validarParametro('nome');

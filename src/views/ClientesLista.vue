@@ -34,12 +34,12 @@
           label="Pesquisar"
           prepend-inner-icon="mdi-magnify"
           v-model="tableSearch"
-          @keydown="(x) => {if (x.code === 'F2') pesquisarCadastroPorDigital()}"
           :autofocus="$vuetify.breakpoint.mdAndUp"
-          hide-details
+          :hint="$vuetify.breakpoint.mdAndUp && biometriaDisponivel ? 'Pressione F2 para buscar por digital' : undefined"
+          @keydown="(x) => {if (x.code === 'F2') pesquisarCadastroPorDigital()}"
         >
           <template v-slot:append-outer>
-            <v-btn color="primary" small @click="pesquisarCadastroPorDigital" v-if="existeCadastroComDigital && biometriaDisponivel">
+            <v-btn color="primary" small @click="pesquisarCadastroPorDigital" v-if="biometriaDisponivel">
               <v-icon>mdi-fingerprint</v-icon>
             </v-btn>
           </template>
@@ -56,6 +56,9 @@
         no-results-text="Nenhum cliente encontrado"
         sort-by="nome"
       >
+        <template v-slot:[`item.nome`]="{item}">
+          {{ item.nome }} <v-icon v-if="!!item.digital && biometriaDisponivel" dense>mdi-fingerprint</v-icon>
+        </template>
         <template v-slot:[`item.criado_em`]="{item}">
           <span v-if="item.criado_em">{{ moment(item.criado_em).format('DD/MM/YYYY') }}</span>
           <span v-else class="grey--text">NÃO POSSUI</span>
@@ -232,13 +235,14 @@ import moment from '@/plugins/moment';
 import LoadingDialog from '@/components/LoadingDialog';
 import StringHelper from '@/helper/StringHelper';
 import CepWebClient from '@/http/CepWebClient';
+import {config} from '@/config';
 export default {
   name: 'ClientesLista',
   components: {LoadingDialog, AsyncContainer},
   data: () => ({
     moment,
     loading: true,
-    biometriaDisponivel: false,
+    biometriaDisponivel: config.biometria,
     tableHeaders: [
       {value: 'id', text: 'COD.', width: '6rem'},
       {value: 'nome', text: 'NOME'},
@@ -296,8 +300,7 @@ export default {
     async loadData() {
       const webclient = http();
       const {data} = await webclient.get('clientes');
-      this.tableItems = data.dados;
-      this.biometriaDisponivel = data.biometria_nitgen;
+      this.tableItems = data;
       this.loading = false;
     },
     criarCadastro() {
@@ -338,8 +341,8 @@ export default {
         await webclient.post('clientes', cadastro);
         await this.loadData();
         this.dialogEditarCadastro = false;
-        if (this.iptId) this.$store.commit('showSnackbar', {color: 'success', text: 'Cadastro atualizado'});
-        else this.$store.commit('showSnackbar', {color: 'success', text: 'Cliente registrado'});
+        if (this.iptId) this.$store.commit('showSnackbar', {color: 'success', text: 'Cadastro atualizado!'});
+        else this.$store.commit('showSnackbar', {color: 'success', text: 'Cliente registrado!'});
       } finally {
         this.salvandoCadastro = false;
       }
@@ -351,13 +354,17 @@ export default {
         const webclient = http();
         await webclient.delete('clientes?id=' + item.id);
         await this.loadData();
-        this.$store.commit('showSnackbar', {color: 'primary', text: 'Cadastro apagado'});
+        this.$store.commit('showSnackbar', {color: 'primary', text: 'Cadastro apagado!'});
       } finally {
         this.deletandoCadastro = false;
       }
     },
     async pesquisarCadastroPorDigital() {
-      if (!this.existeCadastroComDigital || !this.biometriaDisponivel) return;
+      if (!this.biometriaDisponivel) return;
+      if (!this.existeCadastroComDigital) {
+        alert('Não existe nenhum cliente com digital cadastrada!');
+        return;
+      }
       const biometriaNitgen = new BiometriaNitgen();
       try {
         const cadastros = this.tableItems.filter(i => !!i.digital).map(i => ({id: i.id, digital: i.digital}));
@@ -367,7 +374,10 @@ export default {
         if (resultado === 0) alert('Nenhum cadastro pôde ser encontrado com esta digital escaneada.');
         else if (resultado > 0) {
           const cadastro = this.tableItems.find(i => i.id === resultado);
-          if (cadastro) this.editarCadastro(cadastro);
+          if (cadastro) {
+            this.tableSearch = cadastro.nome;
+            this.editarCadastro(cadastro);
+          }
         }
       } catch (e) {
         alert('Parece que não foi possível coletar a digital');

@@ -146,7 +146,7 @@ export default {
         await webclient.post('produtos', produto);
         await this.loadData();
         this.dialogEditarProduto = false;
-        this.$store.commit('showSnackbar', {color: 'success', text: 'Produto salvo'});
+        this.$store.commit('showSnackbar', {color: 'success', text: 'Produto salvo!'});
       } finally {
         this.salvandoProduto = false;
       }
@@ -158,7 +158,7 @@ export default {
         const webclient = http();
         await webclient.delete('produtos?id=' + item.id);
         await this.loadData();
-        this.$store.commit('showSnackbar', {color: 'primary', text: 'Produto apagado'});
+        this.$store.commit('showSnackbar', {color: 'primary', text: 'Produto apagado!'});
       } finally {
         this.deletandoProduto = false;
       }
