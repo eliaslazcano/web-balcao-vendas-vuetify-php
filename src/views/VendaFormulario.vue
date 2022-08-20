@@ -131,29 +131,63 @@
         sort-by="produto_nome"
       >
         <template v-slot:[`item.quantidade`]="{item}">
-          <v-edit-dialog :return-value.sync="item.quantidade">
-            {{ item.quantidade }}
+          <div class="d-flex flex-nowrap">
+            <v-icon color="red" size="20" @click="() => { item.quantidade--; onUpdateQuantidadeOuValorUnitario(item, false) }">mdi-minus-box</v-icon>
+            <v-edit-dialog
+              :return-value.sync="item.quantidade"
+              large
+              cancel-text="Cancelar"
+              save-text="Salvar"
+              @save="onUpdateQuantidadeOuValorUnitario(item)"
+            >
+              <span class="mx-3">{{ item.quantidade }}</span>
+              <template v-slot:input>
+                <text-field-monetary
+                  v-model="item.quantidade"
+                  single-line
+                  :rules="[v => !!v || 'Insira a quantidade']"
+                  :options="{precision: 0}"
+                ></text-field-monetary>
+              </template>
+            </v-edit-dialog>
+            <v-icon color="blue" size="20" @click="() => { item.quantidade++; onUpdateQuantidadeOuValorUnitario(item, false) }">mdi-plus-box</v-icon>
+          </div>
+        </template>
+        <template v-slot:[`item.valor_un`]="{item}">
+          <v-edit-dialog
+            :return-value.sync="item.valor_un"
+            large
+            cancel-text="Cancelar"
+            save-text="Salvar"
+            @save="onUpdateQuantidadeOuValorUnitario(item)"
+          >
+            <span style="white-space: nowrap">R$ {{ item.valor_un ? formatoMonetario(item.valor_un) : '0,00' }}</span>
             <template v-slot:input>
-              <v-text-field
-                v-model="item.quantidade"
+              <text-field-monetary
+                v-model="item.valor_un"
                 single-line
-                type="tel"
-                :rules="[v => !!v || 'Insira a quantidade']"
-              ></v-text-field>
+                :rules="[v => !!v || 'Insira o valor unitário']"
+                prefix="R$"
+              ></text-field-monetary>
             </template>
           </v-edit-dialog>
         </template>
         <template v-slot:[`item.valor`]="{item}">
-          <v-edit-dialog :return-value.sync="item.valor">
+          <v-edit-dialog
+            :return-value.sync="item.valor"
+            large
+            cancel-text="Cancelar"
+            save-text="Salvar"
+            @save="onUpdateValorTotal(item)"
+          >
             <span style="white-space: nowrap">R$ {{ item.valor ? formatoMonetario(item.valor) : '0,00' }}</span>
             <template v-slot:input>
-              <v-text-field
-                prefix="R$"
+              <text-field-monetary
                 v-model="item.valor"
                 single-line
-                type="tel"
                 :rules="[v => !!v || 'Insira o valor']"
-              ></v-text-field>
+                prefix="R$"
+              ></text-field-monetary>
             </template>
           </v-edit-dialog>
         </template>
@@ -167,6 +201,7 @@
               <p class="subtitle-2 primary--text mb-0">TOTAL</p>
             </td>
             <td></td>
+            <td></td>
             <td>
               <p class="subtitle-2 primary--text mb-0">R$ {{ formatoMonetario(valorTotal) }}</p>
             </td>
@@ -177,7 +212,7 @@
       </v-data-table>
     </v-card>
     <div class="text-center my-4">
-      <v-btn small color="success" :disabled="tableItems.length === 0" :loading="enviandoVenda" @click="salvarVenda">
+      <v-btn small color="success" :loading="enviandoVenda" @click="salvarVenda">
         <v-icon dense class="mr-1">mdi-content-save</v-icon> Salvar
       </v-btn>
     </div>
@@ -281,7 +316,8 @@ export default {
     tableHeaders: [
       {value: 'produto_nome', text: 'PRODUTO', cellClass: 'text-no-wrap'},
       {value: 'quantidade', text: 'QUANTIDADE'},
-      {value: 'valor', text: 'VALOR', width: '10rem'},
+      {value: 'valor_un', text: 'VALOR UN.', cellClass: 'text-no-wrap'},
+      {value: 'valor', text: 'TOTAL', cellClass: 'text-no-wrap'},
       {value: 'acoes', text: 'REMOVER', align: 'center', cellClass: 'text-no-wrap', sortable: false, filterable: false},
     ],
     tableItems: [],
@@ -350,6 +386,7 @@ export default {
       this.tableCadastrosLoading = false;
     },
     async salvarVenda() {
+      if (this.tableItems.length === 0 && !confirm('A venda está vazia, sem produto nenhum. Tem certeza?')) return;
       try {
         this.enviandoVenda = true;
         const webclient = http();
@@ -438,6 +475,25 @@ export default {
         this.dialogRfid = false;
         this.vinculandoRfid = false;
       }
+    },
+    onUpdateQuantidadeOuValorUnitario(item, emitirSnack = true) {
+      if (item.quantidade < 0) item.quantidade = 0;
+      item.valor = item.valor_un * item.quantidade;
+      if (emitirSnack) this.$store.commit('showSnackbar', {color: 'info', text: 'VALOR TOTAL FOI RECALCULADO'});
+    },
+    onUpdateValorTotal(item) {
+      item.valor_un = parseFloat(Number(item.valor / item.quantidade).toFixed(2));
+      const novoValor = item.valor_un * item.quantidade;
+      if (novoValor === item.valor) this.$store.commit('showSnackbar', {color: 'info', text: 'VALOR UNITÁRIO FOI RECALCULADO'});
+      else {
+        this.$nextTick(() => setTimeout(() => {
+          item.valor = item.valor_un * item.quantidade;
+          this.$store.commit('showSnackbar', {
+            color: 'info',
+            text: 'VALOR TOTAL E UNITÁRIO FORAM RECALCULADOS PARA O MAIS PRÓXIMO POSSÍVEL'
+          });
+        }, 600));
+      }
     }
   },
   created() {
@@ -450,11 +506,16 @@ export default {
         const pedidoItemIndex = this.tableItems.findIndex(i => i.produto === v);
         if (pedidoItemIndex === -1) {
           this.tableItems.push({
-            'id': null, 'produto': produto.id, 'produto_nome': produto.nome, 'quantidade': 1, 'valor': produto.valor
+            'id': null,
+            'produto': produto.id,
+            'produto_nome': produto.nome,
+            'quantidade': 1,
+            'valor_un': produto.valor,
+            'valor': produto.valor,
           });
         } else {
           this.tableItems[pedidoItemIndex].quantidade = parseFloat(this.tableItems[pedidoItemIndex].quantidade) + 1;
-          this.tableItems[pedidoItemIndex].valor = parseFloat(this.tableItems[pedidoItemIndex].valor) + produto.valor;
+          this.tableItems[pedidoItemIndex].valor = parseFloat(this.tableItems[pedidoItemIndex].valor) + parseFloat(this.tableItems[pedidoItemIndex].valor_un);
         }
         this.$nextTick(() => this.iptProduto = null);
       }

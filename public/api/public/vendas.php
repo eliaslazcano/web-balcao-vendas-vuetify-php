@@ -12,7 +12,7 @@ if (HttpHelper::isGet()) {
     $sql = 'SELECT v.id, COALESCE(c.nome, v.cliente) AS cliente, v.cadastro, v.nota, v.credito, v.criado_em FROM vendas v LEFT JOIN clientes c ON v.cadastro = c.id WHERE v.id = :id';
     $x = $db->queryPrimeiraLinha($sql, [':id' => $id], ['id','cadastro','credito']);
     if (!$x)HttpHelper::erroJson(400, 'Venda não encontrada');
-    $x['itens'] = $db->query('SELECT v.id, v.produto, p.nome AS produto_nome, v.quantidade, v.valor FROM venda_itens v INNER JOIN produtos p on v.produto = p.id WHERE v.venda = :id', [':id' => $id], ['id','produto','quantidade','valor']);
+    $x['itens'] = $db->query('SELECT v.id, v.produto, p.nome AS produto_nome, v.quantidade, v.valor_un, v.valor FROM venda_itens v INNER JOIN produtos p on v.produto = p.id WHERE v.venda = :id', [':id' => $id], ['id','produto','quantidade','valor_un','valor']);
   }
   else {
     $data_inicio = HttpHelper::obterParametro('data_inicio') ?: '1900-01-01 00:00:00';
@@ -30,8 +30,6 @@ if (HttpHelper::isGet()) {
   $itens = HttpHelper::validarParametro('itens'); //Array
   $remover = HttpHelper::obterParametro('remover'); //Array de ID dos itens que tem de ser removidos da venda
 
-  if (empty($itens)) HttpHelper::erroJson(400, 'A venda está sem nenhum produto');
-
   if (!$id) {
     $sql = 'INSERT INTO vendas (cliente, credito, cadastro, nota) VALUES (UPPER(:cliente), :credito, :cadastro, :nota)';
     $id = $db->insert($sql, [':cliente' => $cliente ?: null, ':credito' => $credito ?: 0, ':cadastro' => $cadastro, ':nota' => $nota ?: null]);
@@ -44,11 +42,11 @@ if (HttpHelper::isGet()) {
   foreach ($itens as $i) {
     if ($i['id']) {
       $item_encontrado = $db->queryPrimeiraLinha('SELECT id FROM venda_itens WHERE id = :id', [':id' => $i['id']]);
-      if ($item_encontrado) $db->update('UPDATE venda_itens SET quantidade = :quantidade, valor = :valor WHERE id = :id', [':quantidade' => $i['quantidade'], ':valor' => $i['valor'], ':id' => $i['id']]);
+      if ($item_encontrado) $db->update('UPDATE venda_itens SET quantidade = :quantidade, valor_un = :valor_un, valor = :valor WHERE id = :id', [':quantidade' => $i['quantidade'], ':valor_un' => $i['valor_un'], ':valor' => $i['valor'], ':id' => $i['id']]);
     }
     else {
-      $sql = 'INSERT INTO venda_itens (venda, produto, quantidade, valor) VALUES (:venda, :produto, :quantidade, :valor)';
-      $db->insert($sql, [':venda' => $id, ':produto' => $i['produto'], ':quantidade' => $i['quantidade'], ':valor' => $i['valor']]);
+      $sql = 'INSERT INTO venda_itens (venda, produto, quantidade, valor_un, valor) VALUES (:venda, :produto, :quantidade, :valor_un, :valor)';
+      $db->insert($sql, [':venda' => $id, ':produto' => $i['produto'], ':quantidade' => $i['quantidade'], ':valor_un' => $i['valor_un'], ':valor' => $i['valor']]);
     }
   }
 

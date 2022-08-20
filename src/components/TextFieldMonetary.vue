@@ -66,7 +66,7 @@ export default {
         return this.value !== null && this.value !== '' ? this.humanFormat(this.value.toString()) : this.valueWhenIsEmpty;
       },
       set: function(newValue) {
-        this.$emit('input', this.machineFormat(newValue));
+        this.$emit('input', Number(this.machineFormat(newValue)));
       },
     },
   },
@@ -87,18 +87,10 @@ export default {
         number = this.cleanNumber(number);
         number = number.padStart(parseInt(this.options.precision) + 1, "0");
         number =
-          number.substring(
-            0,
-            number.length - parseInt(this.options.precision)
-          ) +
+          number.substring(0, number.length - parseInt(this.options.precision)) +
           "." +
-          number.substring(
-            number.length - parseInt(this.options.precision),
-            number.length
-          );
-        if (isNaN(number)) {
-          number = this.valueWhenIsEmpty;
-        }
+          number.substring(number.length - parseInt(this.options.precision), number.length);
+        if (isNaN(number)) number = this.valueWhenIsEmpty;
       } else {
         number = this.valueWhenIsEmpty;
       }

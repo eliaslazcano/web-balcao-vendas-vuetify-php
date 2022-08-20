@@ -141,10 +141,10 @@ export default {
     loading: true,
     tableLoading: true,
     tableHeaders: [
-      {value: 'id', text: 'Nº', width: '7rem'},
-      {value: 'criado_em', text: 'DATA', width: '12rem'},
+      {value: 'id', text: 'Nº', width: '6rem'},
+      {value: 'criado_em', text: 'DATA', width: '11rem'},
       {value: 'cliente', text: 'CLIENTE'},
-      {value: 'debito', text: 'VALOR', filterable: false},
+      {value: 'debito', text: 'VALOR', cellClass: 'text-no-wrap', filterable: false},
       {value: 'acoes', text: 'ABRIR', align: 'center', cellClass: 'text-no-wrap', sortable: false, filterable: false},
     ],
     tableItems: [],

@@ -432,6 +432,10 @@ export default {
     async cadastrarEmail() {
       const email = prompt('Digite o endereço de e-mail');
       if (!email || email.trim().length === 0) return;
+      if (!/.+@.+\..+/.test(email)) {
+        this.$store.commit('showSnackbar', {color: 'error', text: 'E-mail inválido'});
+        return;
+      }
       const webclient = http();
       await webclient.post('clientes/emails', {cadastro: this.iptId, email: email.trim().toLowerCase()})
         .then(async () => {

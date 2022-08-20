@@ -113,7 +113,13 @@
       :color="$store.state.snackbarColor"
       :value="$store.state.snackbarShow"
       @input="$store.commit('hideSnackbar')"
-    >{{$store.state.snackbarText}}</v-snackbar>
+    >
+      <v-icon size="20" class="mr-2" v-if="$store.state.snackbarColor === 'warning'">mdi-alert</v-icon>
+      <v-icon size="20" class="mr-2" v-else-if="$store.state.snackbarColor === 'success'">mdi-check</v-icon>
+      <v-icon size="20" class="mr-2" v-else-if="$store.state.snackbarColor === 'error'">mdi-close</v-icon>
+      <v-icon size="20" class="mr-2" v-else-if="$store.state.snackbarColor === 'info'">mdi-information</v-icon>
+      <strong style="text-transform: uppercase">{{$store.state.snackbarText}}</strong>
+    </v-snackbar>
   </v-app>
 </template>
 
