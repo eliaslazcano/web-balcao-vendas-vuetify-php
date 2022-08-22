@@ -1,10 +1,12 @@
-import http from '@/plugins/axios';
+import {createWebClient} from '@/plugins/axios';
 import {config} from '@/config';
 
 export default class BiometriaNitgen {
 
   constructor() {
-    this.webclient = http();
+    this.webclient = createWebClient(mensagem => {
+      window.alert(mensagem);
+    }, 'Não foi possível se conectar com o leitor de digitais');
     this.webclient.defaults.baseURL = config.http.biometriaBaseUrl;
   }
 

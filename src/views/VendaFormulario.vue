@@ -52,6 +52,8 @@
                 @click:clear="desvincularCadastro"
                 :clearable="!cadastro"
                 :autofocus="$vuetify.breakpoint.mdAndUp"
+                :append-icon="cadastro ? 'mdi-open-in-new' : undefined"
+                @click:append="$router.push('/cliente/' + cadastro)"
                 outlined
                 dense
               ></v-text-field>
@@ -381,7 +383,7 @@ export default {
       this.tableCadastrosLoading = true;
       const webclient = http();
       const {data} = await webclient.get('clientes');
-      this.tableCadastrosItems = data;
+      this.tableCadastrosItems = data.clientes;
       this.tableCadastrosLoading = false;
     },
     async salvarVenda() {

@@ -33,13 +33,15 @@
         <v-text-field
           label="Pesquisar"
           prepend-inner-icon="mdi-magnify"
+          placeholder="Código ou Nome"
+          persistent-placeholder
           v-model="tableSearch"
           :autofocus="$vuetify.breakpoint.mdAndUp"
-          :hint="$vuetify.breakpoint.mdAndUp && biometriaDisponivel ? 'Pressione F2 para buscar por digital' : undefined"
+          :hint="biometriaDisponivel && $vuetify.breakpoint.mdAndUp ? 'Pressione F2 para buscar por digital' : undefined"
           @keydown="(x) => {if (x.code === 'F2') pesquisarCadastroPorDigital()}"
         >
           <template v-slot:append-outer>
-            <v-btn color="primary" small @click="pesquisarCadastroPorDigital" v-if="biometriaDisponivel">
+            <v-btn color="primary" small @click="pesquisarCadastroPorDigital" v-if="biometriaDisponivel && $vuetify.breakpoint.mdAndUp">
               <v-icon>mdi-fingerprint</v-icon>
             </v-btn>
           </template>
@@ -50,6 +52,7 @@
         :items="tableItems"
         :search="tableSearch"
         :dense="tableDense"
+        :loading="tableLoading"
         :footer-props="{'items-per-page-options': [10, 15, 25, 50]}"
         :mobile-breakpoint="0"
         no-data-text="Nenhum cliente cadastrado"
@@ -57,7 +60,8 @@
         sort-by="nome"
       >
         <template v-slot:[`item.nome`]="{item}">
-          {{ item.nome }} <v-icon v-if="!!item.digital && biometriaDisponivel" dense>mdi-fingerprint</v-icon>
+          <router-link :to="'/cliente/' + item.id">{{ item.nome }}</router-link>
+          <v-icon v-if="biometriaDisponivel && !!item.digital" dense>mdi-fingerprint</v-icon>
         </template>
         <template v-slot:[`item.criado_em`]="{item}">
           <span v-if="item.criado_em">{{ moment(item.criado_em).format('DD/MM/YYYY') }}</span>
@@ -67,7 +71,7 @@
 
           <v-tooltip bottom>
             <template v-slot:activator="{ on, attrs }">
-              <v-btn color="yellow darken-4" small icon v-bind="attrs" v-on="on" @click="editarCadastro(item)">
+              <v-btn color="orange" small icon v-bind="attrs" v-on="on" :disabled="tableLoading" @click="editarCadastro(item)">
                 <v-icon>mdi-pencil</v-icon>
               </v-btn>
             </template>
@@ -76,7 +80,7 @@
 
           <v-tooltip bottom>
             <template v-slot:activator="{ on, attrs }">
-              <v-btn color="primary" small icon v-bind="attrs" v-on="on" @click="visualizarEnderecos(item.id)">
+              <v-btn color="green" small icon v-bind="attrs" v-on="on" :disabled="tableLoading" @click="visualizarEnderecos(item.id)">
                 <v-icon>mdi-home-map-marker</v-icon>
               </v-btn>
             </template>
@@ -85,7 +89,7 @@
 
           <v-tooltip bottom>
             <template v-slot:activator="{ on, attrs }">
-              <v-btn color="info" small icon v-bind="attrs" v-on="on" @click="visualizarEmails(item.id)">
+              <v-btn color="info" small icon v-bind="attrs" v-on="on" :disabled="tableLoading" @click="visualizarEmails(item.id)">
                 <v-icon>mdi-at</v-icon>
               </v-btn>
             </template>
@@ -94,7 +98,16 @@
 
           <v-tooltip bottom>
             <template v-slot:activator="{ on, attrs }">
-              <v-btn color="deep-purple" small icon v-bind="attrs" v-on="on" @click="visualizarObservacoes(item.id)">
+              <v-btn color="indigo" small icon v-bind="attrs" v-on="on" :disabled="tableLoading" @click="visualizarTelefones(item.id)">
+                <v-icon>mdi-phone</v-icon>
+              </v-btn>
+            </template>
+            <span>Telefones</span>
+          </v-tooltip>
+
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn color="deep-purple" small icon v-bind="attrs" v-on="on" :disabled="tableLoading" @click="visualizarObservacoes(item.id)">
                 <v-icon>mdi-comment-text</v-icon>
               </v-btn>
             </template>
@@ -103,7 +116,7 @@
 
           <v-tooltip bottom>
             <template v-slot:activator="{ on, attrs }">
-              <v-btn color="red" small icon v-bind="attrs" v-on="on" @click="deletarCadastro(item)" :disabled="deletandoCadastro">
+              <v-btn color="red" small icon v-bind="attrs" v-on="on" :disabled="tableLoading" @click="deletarCadastro(item)">
                 <v-icon>mdi-delete</v-icon>
               </v-btn>
             </template>
@@ -118,9 +131,10 @@
         <v-icon>mdi-plus</v-icon>
       </v-btn>
     </v-fab-transition>
-    <v-dialog v-model="dialogEditarCadastro" width="32rem">
+    <loading-dialog v-model="dialogLoading" :text="dialogLoadingText" width="400"></loading-dialog>
+    <v-dialog v-model="dialogEditarCadastro" width="32rem" :persistent="tableLoading">
       <v-card>
-        <v-form ref="form-cadastro" @submit.prevent="salvarCadastro" :disabled="salvandoCadastro">
+        <v-form ref="form-cadastro" @submit.prevent="salvarCadastro" :disabled="tableLoading">
           <v-card-title>{{ iptId ? 'Editar' : 'Criar' }} cadastro</v-card-title>
           <v-card-subtitle v-if="!!iptId">Cod. {{ iptId }}</v-card-subtitle>
           <v-card-text>
@@ -131,6 +145,18 @@
               dense
               :rules="[v => (!!v && !!v.trim()) || 'Coloque o nome']"
             ></v-text-field>
+            <v-select
+              label="Categoria"
+              v-model="iptCategoria"
+              :items="iptCategoriaItems"
+              item-text="nome"
+              item-value="id"
+              placeholder="Nenhuma"
+              persistent-placeholder
+              clearable
+              outlined
+              dense
+            ></v-select>
             <v-text-field
               v-if="biometriaDisponivel"
               label="Digital"
@@ -139,8 +165,10 @@
               placeholder="Não possui"
               persistent-placeholder
               hide-details
-              append-icon="mdi-fingerprint"
-              @click:append="coletarDigital"
+              :append-icon="iptDigital ? 'mdi-close' : undefined"
+              @click:append="iptDigital = null"
+              :append-outer-icon="biometriaDisponivel && $vuetify.breakpoint.mdAndUp ? 'mdi-fingerprint' : undefined"
+              @click:append-outer="coletarDigital"
               readonly
               outlined
               dense
@@ -148,15 +176,14 @@
             </v-text-field>
           </v-card-text>
           <v-card-actions class="justify-center">
-            <v-btn color="secondary" small depressed :disabled="salvandoCadastro" @click="dialogEditarCadastro = false">
+            <v-btn color="secondary" small depressed :disabled="tableLoading" @click="dialogEditarCadastro = false">
               Fechar
             </v-btn>
-            <v-btn color="primary" small depressed :loading="salvandoCadastro" type="submit">Confirmar</v-btn>
+            <v-btn color="primary" small depressed :loading="tableLoading" type="submit">Confirmar</v-btn>
           </v-card-actions>
         </v-form>
       </v-card>
     </v-dialog>
-    <loading-dialog v-model="dialogLoading" :text="dialogLoadingText" width="400"></loading-dialog>
     <v-dialog v-model="dialogEnderecos" width="72rem">
       <v-card>
         <v-card-title>Endereços</v-card-title>
@@ -184,6 +211,24 @@
             <v-icon small class="mr-1">mdi-plus-circle</v-icon> Cadastrar
           </v-btn>
         </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="dialogCadastrarEndereco" width="32rem" :persistent="dialogCadastrarEnderecoLoading">
+      <v-card>
+        <v-form ref="form-endereco" :disabled="dialogCadastrarEnderecoLoading" @submit.prevent="cadastrarEndereco">
+          <v-card-title>Cadastrar endereço</v-card-title>
+          <v-card-text>
+            <v-text-field label="CEP" v-model="iptCep" v-mask="'########'" :loading="iptCepLoading"></v-text-field>
+            <v-text-field label="UF" v-model="iptUf" v-mask="'AA'"></v-text-field>
+            <v-text-field label="Bairro" v-model="iptBairro"></v-text-field>
+            <v-text-field label="Cidade" v-model="iptCidade" :rules="[v => (!!v && !!v.trim()) || 'Insira a rua e número neste campo']"></v-text-field>
+            <v-text-field label="Logradouro" v-model="iptLogradouro" :rules="iptLogradouroRules"></v-text-field>
+          </v-card-text>
+          <v-card-actions class="justify-center">
+            <v-btn color="secondary" small depressed @click="dialogCadastrarEndereco = false" :disabled="dialogCadastrarEnderecoLoading">Cancelar</v-btn>
+            <v-btn color="primary" small depressed type="submit" :loading="dialogCadastrarEnderecoLoading">Salvar</v-btn>
+          </v-card-actions>
+        </v-form>
       </v-card>
     </v-dialog>
     <v-dialog v-model="dialogEmails" width="40rem">
@@ -215,6 +260,77 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="dialogTelefones" width="32rem">
+      <v-card>
+        <v-card-title>Telefones</v-card-title>
+        <v-data-table
+          :headers="tableGenericHeaders"
+          :items="tableGenericItems"
+          :loading="tableGenericLoading"
+          no-data-text="Nenhum telefone cadastrado"
+          sort-by="criado_em"
+          sort-desc
+        >
+          <template v-slot:[`item.criado_em`]="{item}">
+            <span v-if="item.criado_em">{{ moment(item.criado_em).format('DD/MM/YYYY HH:mm') }}</span>
+            <span v-else class="grey--text">NÃO POSSUI</span>
+          </template>
+          <template v-slot:[`item.tipo`]="{item}">
+            <v-icon v-if="item.tipo === 1">mdi-phone</v-icon>
+            <v-icon v-else-if="item.tipo === 2">mdi-cellphone</v-icon>
+          </template>
+          <template v-slot:[`item.acoes`]="{item}">
+            <v-btn color="red" small icon @click="excluirTelefone(item.id)">
+              <v-icon>mdi-delete</v-icon>
+            </v-btn>
+          </template>
+        </v-data-table>
+        <v-card-actions class="justify-center">
+          <v-btn color="secondary" small depressed @click="dialogTelefones = false">Fechar</v-btn>
+          <v-btn color="success" small depressed @click="cadastrarTelefone">
+            <v-icon small class="mr-1">mdi-plus-circle</v-icon> Cadastrar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="dialogCadastrarTelefone" width="32rem" :persistent="tableGenericLoading">
+      <v-card>
+        <v-form ref="form-telefone" @submit.prevent="cadastrarTelefone" :disabled="tableGenericLoading">
+          <v-card-title>Cadastrar telefone</v-card-title>
+          <v-card-text>
+            <v-select
+              label="Tipo"
+              :items="[{value: 1, text: 'Fixo'}, {value: 2, text: 'Celular'}]"
+              placeholder="Selecione"
+              persistent-placeholder
+              outlined
+              dense
+              v-model="iptTelefoneTipo"
+              :rules="[v => !!v || 'Selecione o tipo de telefone']"
+            ></v-select>
+            <v-text-field
+              label="Número do telefone com DDD"
+              class="mt-3"
+              placeholder="(00) 0000-0000"
+              persistent-placeholder
+              v-mask="['(##) ####-####', '(##) #####-####']"
+              outlined
+              dense
+              v-model="iptTelefoneNumero"
+              :rules="[v => !!v || 'Insira o número de telefone', v => (!!v && v.length >= 14) || 'Complete o telefone']"
+            ></v-text-field>
+          </v-card-text>
+          <v-card-actions class="justify-center">
+            <v-btn color="secondary" small depressed @click="dialogCadastrarTelefone = false" :disabled="tableGenericLoading">
+              Cancelar
+            </v-btn>
+            <v-btn color="primary" small depressed type="submit" :loading="tableGenericLoading">
+              Gravar
+            </v-btn>
+          </v-card-actions>
+        </v-form>
+      </v-card>
+    </v-dialog>
     <v-dialog v-model="dialogObservacoes" width="64rem">
       <v-card>
         <v-card-title>Observações</v-card-title>
@@ -244,24 +360,6 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="dialogCadastrarEndereco" width="32rem">
-      <v-card>
-        <v-form ref="form-endereco" :disabled="dialogCadastrarEnderecoLoading" @submit.prevent="cadastrarEndereco">
-          <v-card-title>Cadastrar endereço</v-card-title>
-          <v-card-text>
-            <v-text-field label="CEP" v-model="iptCep" v-mask="'########'" :loading="iptCepLoading"></v-text-field>
-            <v-text-field label="UF" v-model="iptUf" v-mask="'AA'"></v-text-field>
-            <v-text-field label="Bairro" v-model="iptBairro"></v-text-field>
-            <v-text-field label="Cidade" v-model="iptCidade" :rules="[v => (!!v && !!v.trim()) || 'Insira a rua e número neste campo']"></v-text-field>
-            <v-text-field label="Logradouro" v-model="iptLogradouro" :rules="iptLogradouroRules"></v-text-field>
-          </v-card-text>
-          <v-card-actions class="justify-center">
-            <v-btn color="secondary" small depressed @click="dialogCadastrarEndereco = false" :disabled="dialogCadastrarEnderecoLoading">Cancelar</v-btn>
-            <v-btn color="primary" small depressed type="submit" :loading="dialogCadastrarEnderecoLoading">Salvar</v-btn>
-          </v-card-actions>
-        </v-form>
-      </v-card>
-    </v-dialog>
   </async-container>
 </template>
 
@@ -282,28 +380,39 @@ export default {
     loading: true,
     biometriaDisponivel: config.biometria,
     tableHeaders: [
-      {value: 'id', text: 'COD.', width: '6rem'},
-      {value: 'nome', text: 'NOME'},
-      {value: 'criado_em', text: 'DATA CADASTRO', width: '9.2rem'},
+      {value: 'id', text: 'COD.', width: '5.2rem'},
+      {value: 'nome', text: 'NOME', cellClass: 'text-no-wrap'},
+      {value: 'vendas', text: 'VENDAS', cellClass: 'text-no-wrap', filterable: false},
+      {value: 'criado_em', text: 'DATA CADASTRO', cellClass: 'text-no-wrap', filterable: false},
       {value: 'acoes', text: 'AÇÕES', align: 'center', cellClass: 'text-no-wrap', sortable: false, filterable: false},
     ],
     tableItems: [],
     tableSearch: '',
     tableDense: false,
+    tableLoading: false,
+
     dialogEditarCadastro: false,
-    salvandoCadastro: false,
-    deletandoCadastro: false,
     iptId: null,
     iptNome: '',
+    iptCategoria: null,
+    iptCategoriaItems: [],
     iptDigital: '',
+
     dialogLoading: false,
     dialogLoadingText: '',
     dialogEnderecos: false,
     dialogEmails: false,
+    dialogTelefones: false,
     dialogObservacoes: false,
+
     tableGenericHeaders: [],
     tableGenericItems: [],
     tableGenericLoading: false,
+
+    dialogCadastrarTelefone: false,
+    iptTelefoneTipo: null,
+    iptTelefoneNumero: '',
+
     dialogCadastrarEndereco: false,
     dialogCadastrarEnderecoLoading: false,
     iptCep: '',
@@ -324,12 +433,14 @@ export default {
     async loadData() {
       const webclient = http();
       const {data} = await webclient.get('clientes');
-      this.tableItems = data;
+      this.tableItems = data.clientes;
+      this.iptCategoriaItems = data.categorias;
       this.loading = false;
     },
     criarCadastro() {
       this.iptId = null;
       this.iptNome = '';
+      this.iptCategoria = null;
       this.iptDigital = '';
       if (this.$refs['form-cadastro']) this.$refs['form-cadastro'].resetValidation();
       this.dialogEditarCadastro = true;
@@ -337,30 +448,29 @@ export default {
     editarCadastro(item) {
       this.iptId = item.id;
       this.iptNome = item.nome;
+      this.iptCategoria = item.categoria;
       this.iptDigital = item.digital;
       this.dialogEditarCadastro = true;
     },
-    async coletarDigital() {
-      if (this.iptDigital) {
-       if (!confirm('Isso irá substituir a digital atual do cadastro, tem certeza?')) return;
-      }
+    coletarDigital() {
+      if (this.iptDigital && !confirm('Isso irá substituir a digital atual do cadastro, tem certeza?')) return;
       const biometriaNitgen = new BiometriaNitgen();
-      try {
-       const digital = await biometriaNitgen.capturaCompleta();
-       if (!digital) {
-         alert('Parece que você cancelou a coleta ou ocorreu um problema.');
-         return;
-       }
-       this.iptDigital = digital;
-      } catch (e) {
-        alert('Parece que não foi possível coletar a digital');
-      }
+      biometriaNitgen.capturaCompleta()
+        .then(digital => {
+          if (digital) this.iptDigital = digital;
+          else alert('Parece que você cancelou a coleta ou ocorreu um problema.');
+        });
     },
     async salvarCadastro() {
       if (!this.$refs['form-cadastro'].validate()) return;
       try {
-        this.salvandoCadastro = true;
-        const cadastro = {id: this.iptId, codigo: this.iptCodigo, nome: this.iptNome, digital: this.iptDigital, valor: this.iptValor};
+        this.tableLoading = true;
+        const cadastro = {
+          id: this.iptId,
+          nome: this.iptNome,
+          categoria: this.iptCategoria,
+          digital: this.iptDigital
+        };
         const webclient = http();
         await webclient.post('clientes', cadastro);
         await this.loadData();
@@ -368,32 +478,32 @@ export default {
         if (this.iptId) this.$store.commit('showSnackbar', {color: 'success', text: 'Cadastro atualizado!'});
         else this.$store.commit('showSnackbar', {color: 'success', text: 'Cliente registrado!'});
       } finally {
-        this.salvandoCadastro = false;
+        this.tableLoading = false;
       }
     },
     async deletarCadastro(item) {
       if (!confirm(`Tem certeza que vai apagar '${item.nome}'?`)) return;
       try {
-        this.deletandoCadastro = true;
+        this.tableLoading = true;
         const webclient = http();
         await webclient.delete('clientes?id=' + item.id);
         await this.loadData();
         this.$store.commit('showSnackbar', {color: 'primary', text: 'Cadastro apagado!'});
       } finally {
-        this.deletandoCadastro = false;
+        this.tableLoading = false;
       }
     },
     async pesquisarCadastroPorDigital() {
       if (!this.biometriaDisponivel) return;
       if (!this.existeCadastroComDigital) {
-        alert('Não existe nenhum cliente com digital cadastrada!');
+        alert('Nenhum cliente possui digital cadastrada!');
         return;
       }
-      const biometriaNitgen = new BiometriaNitgen();
+      this.dialogLoadingText = 'Enviando todas as biometrias para a memória e escaneando';
+      this.dialogLoading = true;
       try {
         const cadastros = this.tableItems.filter(i => !!i.digital).map(i => ({id: i.id, digital: i.digital}));
-        this.dialogLoading = true;
-        this.dialogLoadingText = 'Enviando todas as biometrias para a memória..';
+        const biometriaNitgen = new BiometriaNitgen();
         const resultado = await biometriaNitgen.identificar(cadastros);
         if (resultado === 0) alert('Nenhum cadastro pôde ser encontrado com esta digital escaneada.');
         else if (resultado > 0) {
@@ -453,6 +563,27 @@ export default {
         this.tableGenericLoading = false;
       }
     },
+    async visualizarTelefones(idCliente) {
+      this.tableGenericHeaders = [
+        {value: 'criado_em', text: 'DATA', width: '9.2rem', cellClass: 'text-no-wrap'},
+        {value: 'tipo', text: 'TIPO', width: '5rem'},
+        {value: 'numero', text: 'NÚMERO', cellClass: 'text-no-wrap', sortable: false},
+        {value: 'acoes', text: 'EXCLUIR', cellClass: 'text-no-wrap', sortable: false, align: 'center'},
+      ];
+      this.tableGenericItems = [];
+      this.tableGenericLoading = true;
+      this.dialogTelefones = true;
+      this.iptId = idCliente;
+      try {
+        const webclient = http();
+        const {data} = await webclient.get(`clientes/telefones?cadastro=${idCliente}`);
+        this.tableGenericItems = data;
+      } catch (e) {
+        this.dialogTelefones = false;
+      } finally {
+        this.tableGenericLoading = false;
+      }
+    },
     async visualizarObservacoes(idCliente) {
       this.tableGenericHeaders = [
         {value: 'criado_em', text: 'DATA', cellClass: 'text-no-wrap'},
@@ -475,37 +606,47 @@ export default {
     },
     async excluirEndereco(idEndereco) {
       if (!confirm(`Tem certeza que vai apagar o endereço?`)) return;
-      const webclient = http();
-      await webclient.delete(`clientes/enderecos?id=${idEndereco}`);
-      const {data} = await webclient.get(`clientes/enderecos?cadastro=${this.iptId}`);
-      this.tableGenericItems = data;
-    },
-    async excluirEmail(idEmail) {
-      if (!confirm(`Tem certeza que vai apagar o email?`)) return;
-      const webclient = http();
-      await webclient.delete(`clientes/emails?id=${idEmail}`);
-      const {data} = await webclient.get(`clientes/emails?cadastro=${this.iptId}`);
-      this.tableGenericItems = data;
-    },
-    async excluirObservacao(idObservacao) {
-      if (!confirm(`Tem certeza que vai apagar a observação?`)) return;
-      const webclient = http();
-      await webclient.delete(`clientes/observacoes?id=${idObservacao}`);
-      const {data} = await webclient.get(`clientes/observacoes?cadastro=${this.iptId}`);
-      this.tableGenericItems = data;
-    },
-    async cadastrarEmail() {
-      const email = prompt('Digite o endereço de e-mail');
-      if (!email || email.trim().length === 0) return;
-      if (!/.+@.+\..+/.test(email)) {
-        this.$store.commit('showSnackbar', {color: 'error', text: 'E-mail inválido'});
-        return;
-      }
       this.tableGenericLoading = true;
       try {
         const webclient = http();
-        await webclient.post('clientes/emails', {cadastro: this.iptId, email: email.trim().toLowerCase()})
+        await webclient.delete(`clientes/enderecos?id=${idEndereco}`);
+        const {data} = await webclient.get(`clientes/enderecos?cadastro=${this.iptId}`);
+        this.tableGenericItems = data;
+      } finally {
+        this.tableGenericLoading = false;
+      }
+    },
+    async excluirEmail(idEmail) {
+      if (!confirm(`Tem certeza que vai apagar o email?`)) return;
+      this.tableGenericLoading = true;
+      try {
+        const webclient = http();
+        await webclient.delete(`clientes/emails?id=${idEmail}`);
         const {data} = await webclient.get(`clientes/emails?cadastro=${this.iptId}`);
+        this.tableGenericItems = data;
+      } finally {
+        this.tableGenericLoading = false;
+      }
+    },
+    async excluirTelefone(idTelefone) {
+      if (!confirm(`Tem certeza que vai apagar o telefone?`)) return;
+      this.tableGenericLoading = true;
+      try {
+        const webclient = http();
+        await webclient.delete(`clientes/telefones?id=${idTelefone}`);
+        const {data} = await webclient.get(`clientes/telefones?cadastro=${idTelefone}`);
+        this.tableGenericItems = data;
+      } finally {
+        this.tableGenericLoading = false;
+      }
+    },
+    async excluirObservacao(idObservacao) {
+      if (!confirm(`Tem certeza que vai apagar a observação?`)) return;
+      this.tableGenericLoading = true;
+      try {
+        const webclient = http();
+        await webclient.delete(`clientes/observacoes?id=${idObservacao}`);
+        const {data} = await webclient.get(`clientes/observacoes?cadastro=${this.iptId}`);
         this.tableGenericItems = data;
       } finally {
         this.tableGenericLoading = false;
@@ -530,6 +671,45 @@ export default {
         this.dialogCadastrarEndereco = false;
       } finally {
         this.dialogCadastrarEnderecoLoading = false;
+      }
+    },
+    async cadastrarEmail() {
+      const email = prompt('Digite o endereço de e-mail');
+      if (!email || email.trim().length === 0) return;
+      if (!/.+@.+\..+/.test(email)) {
+        this.$store.commit('showSnackbar', {color: 'error', text: 'E-mail inválido'});
+        return;
+      }
+      this.tableGenericLoading = true;
+      try {
+        const webclient = http();
+        await webclient.post('clientes/emails', {cadastro: this.iptId, email: email.trim().toLowerCase()})
+        const {data} = await webclient.get(`clientes/emails?cadastro=${this.iptId}`);
+        this.tableGenericItems = data;
+      } finally {
+        this.tableGenericLoading = false;
+      }
+    },
+    async cadastrarTelefone() {
+      if (!this.dialogCadastrarTelefone) {
+        this.dialogCadastrarTelefone = true;
+        return;
+      }
+      if (!this.$refs['form-telefone'].validate()) return;
+      this.tableGenericLoading = true;
+      try {
+        const webclient = http();
+        const dados = {
+          cadastro: this.iptId,
+          numero: StringHelper.extractNumbers(this.iptTelefoneNumero),
+          tipo: this.iptTelefoneTipo
+        };
+        await webclient.post('clientes/telefones', dados);
+        const {data} = await webclient.get(`clientes/telefones?cadastro=${this.iptId}`);
+        this.tableGenericItems = data;
+        this.dialogCadastrarTelefone = false;
+      } finally {
+        this.tableGenericLoading = false;
       }
     },
     async cadastrarObservacao() {
@@ -571,7 +751,10 @@ export default {
           })
           .finally(() => this.iptCepLoading = false);
       }
-    }
+    },
+    dialogCadastrarTelefone(v) {
+      if (!v) this.$refs['form-telefone'].reset();
+    },
   },
 }
 </script>
