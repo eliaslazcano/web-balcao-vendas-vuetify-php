@@ -15,6 +15,9 @@ if (HttpHelper::isGet()) {
   $numero = HttpHelper::validarParametro('numero');
   $tipo = HttpHelper::validarParametro('tipo');
 
+  $x = $db->queryPrimeiraLinha('SELECT id FROM cliente_telefones WHERE cliente = :cliente AND numero = :numero', [':cliente' => $cadastro, ':numero' => trim($numero)]);
+  if ($x) HttpHelper::erroJson(400, 'O número informado já existe no cadastro do cliente!');
+
   $sql = 'INSERT INTO cliente_telefones (cliente, numero, tipo) VALUES (:cliente, :numero, :tipo)';
   $id = $db->insert($sql, [':cliente' => $cadastro, ':numero' => trim($numero), ':tipo' => $tipo]);
   HttpHelper::emitirJson($id ? intval($id) : null);

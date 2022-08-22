@@ -153,6 +153,7 @@
               item-value="id"
               placeholder="Nenhuma"
               persistent-placeholder
+              no-data-text="Nenhuma categoria foi cadastrada"
               clearable
               outlined
               dense
