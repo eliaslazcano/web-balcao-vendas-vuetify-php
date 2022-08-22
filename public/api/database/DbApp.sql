@@ -13,7 +13,6 @@ create table clientes
 	nome varchar(128) null,
 	categoria int unsigned null,
 	digital mediumtext null comment 'string que identifica a impressao digital',
-	nota mediumtext null,
 	criado_em datetime default current_timestamp() null,
 	deletado_em datetime null,
 	constraint clientes_cliente_categorias_id_fk
