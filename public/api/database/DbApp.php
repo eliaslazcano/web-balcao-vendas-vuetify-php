@@ -6,9 +6,9 @@ use App\Config;
 
 class DbApp extends DatabaseController
 {
-  protected $host = 'localhost';
-  protected $usuario = 'root';
-  protected $senha = '';
-  protected $base_de_dados = 'balcao-venda';
+  protected $host = 'eliaslazcano.dev.br';
+  protected $usuario = 'eliasl75_barjk';
+  protected $senha = 'LHn8tUYoBp@8';
+  protected $base_de_dados = 'eliasl75_barjk';
   protected $timezone = Config::TIMEZONE_DB;
 }
