@@ -116,6 +116,15 @@
 
           <v-tooltip bottom>
             <template v-slot:activator="{ on, attrs }">
+              <v-btn color="teal" small icon v-bind="attrs" v-on="on" :disabled="tableLoading" @click="visualizarVendas(item.id)">
+                <v-icon>mdi-handshake</v-icon>
+              </v-btn>
+            </template>
+            <span>Vendas</span>
+          </v-tooltip>
+
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on, attrs }">
               <v-btn color="red" small icon v-bind="attrs" v-on="on" :disabled="tableLoading" @click="deletarCadastro(item)">
                 <v-icon>mdi-delete</v-icon>
               </v-btn>
@@ -371,6 +380,41 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="dialogVendas" width="32rem">
+      <v-card>
+        <v-card-title>
+          <v-icon large class="mr-2">mdi-handshake</v-icon> Vendas
+        </v-card-title>
+        <v-data-table
+          :headers="tableGenericHeaders"
+          :items="tableGenericItems"
+          :loading="tableGenericLoading"
+          no-data-text="Nenhuma venda realizada"
+          sort-by="criado_em"
+          sort-desc
+        >
+          <template v-slot:[`item.criado_em`]="{item}">
+            <span v-if="item.criado_em">{{ moment(item.criado_em).format('DD/MM/YYYY HH:mm') }}</span>
+            <span v-else class="grey--text">NÃO POSSUI</span>
+          </template>
+          <template v-slot:[`item.id`]="{item}">
+            {{item.id}}
+            <v-icon color="red" class="ml-1" small v-if="item.encerrado_em !== null">mdi-lock</v-icon>
+          </template>
+          <template v-slot:[`item.debito`]="{item}">
+            <span v-if="!item.debito && !item.credito" class="grey--text">R$ {{ formatoMonetario(item.credito) }}</span>
+            <span v-else-if="item.credito >= item.debito" class="success--text">R$ {{ formatoMonetario(item.credito) }}</span>
+            <span v-else-if="item.credito > 0" class="warning--text">R$ {{ formatoMonetario(item.credito) }} / {{ formatoMonetario(item.debito) }}</span>
+            <span v-else class="red--text">R$ {{ formatoMonetario(item.debito) }}</span>
+          </template>
+          <template v-slot:[`item.acoes`]="{item}">
+            <v-btn icon small color="primary" :to="'/venda/' + item.id">
+              <v-icon>mdi-open-in-new</v-icon>
+            </v-btn>
+          </template>
+        </v-data-table>
+      </v-card>
+    </v-dialog>
   </async-container>
 </template>
 
@@ -415,6 +459,7 @@ export default {
     dialogEmails: false,
     dialogTelefones: false,
     dialogObservacoes: false,
+    dialogVendas: false,
 
     tableGenericHeaders: [],
     tableGenericItems: [],
@@ -440,6 +485,9 @@ export default {
   methods: {
     imprimir() {
       setTimeout(() => window.print(), 500);
+    },
+    formatoMonetario(valor) {
+      return StringHelper.monetaryFormat(valor);
     },
     async loadData() {
       const webclient = http();
@@ -608,6 +656,26 @@ export default {
       try {
         const webclient = http();
         const {data} = await webclient.get(`clientes/observacoes?cadastro=${idCliente}`);
+        this.tableGenericItems = data;
+      } catch (e) {
+        this.dialogObservacoes = false;
+      } finally {
+        this.tableGenericLoading = false;
+      }
+    },
+    async visualizarVendas(idCliente) {
+      this.tableGenericHeaders = [
+        {value: 'criado_em', text: 'DATA', width: '9.2rem', cellClass: 'text-no-wrap'},
+        {value: 'id', text: 'COD. VENDA'},
+        {value: 'debito', text: 'VALOR', cellClass: 'text-no-wrap'},
+        {value: 'acoes', text: 'ABRIR', width: '5.4rem', align: 'center', sortable: false, filterable: false},
+      ];
+      this.tableGenericItems = [];
+      this.tableGenericLoading = true;
+      this.dialogVendas = true;
+      try {
+        const webclient = http();
+        const {data} = await webclient.get('clientes/vendas', {params: {'cadastro': idCliente.toString()}});
         this.tableGenericItems = data;
       } catch (e) {
         this.dialogObservacoes = false;

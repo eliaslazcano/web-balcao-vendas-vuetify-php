@@ -187,6 +187,10 @@
             <span v-if="item.criado_em">{{ moment(item.criado_em).format('DD/MM/YYYY HH:mm') }}</span>
             <span v-else class="grey--text">NÃO POSSUI</span>
           </template>
+          <template v-slot:[`item.id`]="{item}">
+            {{item.id}}
+            <v-icon color="red" class="ml-1" small v-if="item.encerrado_em !== null">mdi-lock</v-icon>
+          </template>
           <template v-slot:[`item.debito`]="{item}">
             <span v-if="!item.debito && !item.credito" class="grey--text">R$ {{ formatoMonetario(item.credito) }}</span>
             <span v-else-if="item.credito >= item.debito" class="success--text">R$ {{ formatoMonetario(item.credito) }}</span>

@@ -33,7 +33,7 @@
       </v-card-title>
       <v-card-subtitle v-if="!!criado_em">Criado em {{ moment(criado_em).format('DD/MM/YYYY HH:mm') }}</v-card-subtitle>
       <v-card-text>
-        <v-alert v-if="visitas >= 1" type="info" dense text>Esta {{ id ? 'é' : 'será' }} a {{ visitas > 1 ? visitas : 'primeira' }}ª venda deste cliente</v-alert>
+        <v-alert v-if="visitas >= 1" type="info" dense text>Esta {{ id ? 'é' : 'será' }} a {{ visitas }}ª venda deste cliente</v-alert>
         <v-alert v-if="encerrado_em !== null" type="warning" dense text icon="mdi-lock">Venda encerrada em {{ moment(encerrado_em).format('DD/MM/YYYY HH:mm') }}</v-alert>
         <v-form @submit.prevent :disabled="enviandoVenda || encerrandoVenda">
           <v-row dense>
