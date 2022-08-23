@@ -108,6 +108,7 @@ create table vendas
 	credito decimal(8,2) default 0.00 not null,
 	nota mediumtext null,
 	criado_em datetime default current_timestamp() null,
+	encerrado_em datetime null,
 	deletado_em datetime null,
 	constraint vendas_clientes_id_fk
 		foreign key (cadastro) references clientes (id)
