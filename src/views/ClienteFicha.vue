@@ -172,6 +172,34 @@
           </template>
         </v-data-table>
       </v-card>
+      <v-card class="mb-5">
+        <v-card-title>Vendas</v-card-title>
+        <v-divider></v-divider>
+        <v-data-table
+          :headers="tbVendasHeaders"
+          :items="tbVendasItems"
+          :loading="tbVendasLoading"
+          no-data-text="Nenhuma venda realizada"
+          sort-by="criado_em"
+          sort-desc
+        >
+          <template v-slot:[`item.criado_em`]="{item}">
+            <span v-if="item.criado_em">{{ moment(item.criado_em).format('DD/MM/YYYY HH:mm') }}</span>
+            <span v-else class="grey--text">NÃO POSSUI</span>
+          </template>
+          <template v-slot:[`item.debito`]="{item}">
+            <span v-if="!item.debito && !item.credito" class="grey--text">R$ {{ formatoMonetario(item.credito) }}</span>
+            <span v-else-if="item.credito >= item.debito" class="success--text">R$ {{ formatoMonetario(item.credito) }}</span>
+            <span v-else-if="item.credito > 0" class="warning--text">R$ {{ formatoMonetario(item.credito) }} / {{ formatoMonetario(item.debito) }}</span>
+            <span v-else class="red--text">R$ {{ formatoMonetario(item.debito) }}</span>
+          </template>
+          <template v-slot:[`item.acoes`]="{item}">
+            <v-btn icon small color="primary" :to="'/venda/' + item.id">
+              <v-icon>mdi-open-in-new</v-icon>
+            </v-btn>
+          </template>
+        </v-data-table>
+      </v-card>
     </div>
     <v-dialog v-model="dialogTelefone" width="32rem" :persistent="tbTelefonesLoading">
       <v-card>
@@ -294,6 +322,15 @@ export default {
     tbObsItems: [],
     tbObsLoading: false,
 
+    tbVendasHeaders: [
+      {value: 'criado_em', text: 'DATA', width: '9.2rem', cellClass: 'text-no-wrap'},
+      {value: 'id', text: 'COD. VENDA'},
+      {value: 'debito', text: 'VALOR', cellClass: 'text-no-wrap'},
+      {value: 'acoes', text: 'ABRIR', width: '5.4rem', align: 'center', sortable: false, filterable: false},
+    ],
+    tbVendasItems: [],
+    tbVendasLoading: false,
+
     dialogTelefone: false,
     iptTelefoneTipo: null,
     iptTelefoneNumero: '',
@@ -343,6 +380,12 @@ export default {
       const {data} = await this.webclient.get('clientes/observacoes', {params: {'cadastro': this.id.toString()}});
       this.tbObsItems = data;
       this.tbObsLoading = false;
+    },
+    async loadVendas() {
+      this.tbVendasLoading = true;
+      const {data} = await this.webclient.get('clientes/vendas', {params: {'cadastro': this.id.toString()}});
+      this.tbVendasItems = data;
+      this.tbVendasLoading = false;
     },
     async excluirTelefone(idTelefone) {
       if (!confirm(`Tem certeza que vai apagar o telefone?`)) return;
@@ -466,10 +509,13 @@ export default {
     imprimir() {
       setTimeout(() => window.print(), 500);
     },
+    formatoMonetario(valor) {
+      return StringHelper.monetaryFormat(valor);
+    },
   },
   async created() {
     try {
-      await Promise.all([this.loadBasico(), this.loadTelefones(), this.loadEmails(), this.loadEnderecos(), this.loadObservacoes()]);
+      await Promise.all([this.loadBasico(), this.loadTelefones(), this.loadEmails(), this.loadEnderecos(), this.loadObservacoes(), this.loadVendas()]);
       this.loading = false;
     } catch (e) {
       await this.$router.push('/');
