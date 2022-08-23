@@ -33,9 +33,9 @@
       </v-card-title>
       <v-card-subtitle v-if="!!criado_em">Criado em {{ moment(criado_em).format('DD/MM/YYYY HH:mm') }}</v-card-subtitle>
       <v-card-text>
-        <v-alert v-if="visitas === 1" type="info" dense text>Esta é a primeira venda deste cliente</v-alert>
-        <v-alert v-else-if="visitas > 1" type="info" dense text>Esta é a {{ visitas }}ª venda deste cliente</v-alert>
-        <v-form @submit.prevent :disabled="enviandoVenda">
+        <v-alert v-if="visitas >= 1" type="info" dense text>Esta {{ id ? 'é' : 'será' }} a {{ visitas > 1 ? visitas : 'primeira' }}ª venda deste cliente</v-alert>
+        <v-alert v-if="encerrado_em !== null" type="warning" dense text icon="mdi-lock">Venda encerrada em {{ moment(encerrado_em).format('DD/MM/YYYY HH:mm') }}</v-alert>
+        <v-form @submit.prevent :disabled="enviandoVenda || encerrandoVenda">
           <v-row dense>
             <v-col cols="4" sm="3" md="2">
               <v-text-field
@@ -64,7 +64,7 @@
                 clearable
                 @click:clear="desvincularCadastro"
                 :autofocus="$vuetify.breakpoint.mdAndUp"
-                :readonly="!!iptClienteId"
+                :readonly="!!iptClienteId || encerrado_em !== null"
                 outlined
                 dense
               ></v-text-field>
@@ -74,15 +74,33 @@
                 v-model="iptCliente"
                 placeholder="Sem nome"
                 persistent-placeholder
-                append-icon="mdi-open-in-new"
-                @click:append="$router.push('/cliente/' + cadastro)"
                 readonly
                 outlined
                 dense
-              ></v-text-field>
+              >
+                <template v-slot:append-outer>
+                  <v-tooltip left>
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-btn icon small color="primary" @click="$router.push('/cliente/' + cadastro)" v-bind="attrs" v-on="on">
+                        <v-icon>mdi-account-eye</v-icon>
+                      </v-btn>
+                    </template>
+                    <span>Ver cadastro</span>
+                  </v-tooltip>
+                </template>
+              </v-text-field>
             </v-col>
           </v-row>
-          <v-text-field label="Nota" v-model="iptNota" class="mt-2" outlined dense placeholder="Nenhuma observação" persistent-placeholder></v-text-field>
+          <v-text-field
+            label="Nota"
+            v-model="iptNota"
+            class="mt-2"
+            outlined
+            dense
+            placeholder="Nenhuma observação"
+            persistent-placeholder
+            :readonly="encerrado_em !== null"
+          ></v-text-field>
           <text-field-monetary
             label="Valor Pago"
             v-model="iptCredito"
@@ -93,6 +111,7 @@
             :hint="(valorTotal > 0 && iptCredito < valorTotal) ? 'Falta pagar R$ ' + formatoMonetario(valorTotal - iptCredito) : undefined"
             persistent-hint
             :success="!!valorTotal && !!iptCredito && valorTotal <= iptCredito"
+            :readonly="encerrado_em !== null"
           ></text-field-monetary>
         </v-form>
       </v-card-text>
@@ -120,6 +139,7 @@
       </v-card-title>
       <v-card-text class="pb-0">
         <v-autocomplete
+          v-if="encerrado_em === null"
           label="Adicionar produto"
           v-model="iptProduto"
           :items="iptProdutoItems"
@@ -128,7 +148,7 @@
           no-data-text="Nenhum produto correspondente"
           placeholder="Nome ou código do produto"
           prepend-inner-icon="mdi-plus-circle"
-          :disabled="enviandoVenda"
+          :disabled="enviandoVenda || encerrandoVenda"
           :filter="iptProdutoFiltro"
           auto-select-first
           hide-details
@@ -156,7 +176,7 @@
         sort-by="produto_nome"
       >
         <template v-slot:[`item.quantidade`]="{item}">
-          <div class="d-flex flex-nowrap">
+          <div class="d-flex flex-nowrap" v-if="encerrado_em === null">
             <v-icon color="red" size="20" @click="() => { item.quantidade--; onUpdateQuantidadeOuValorUnitario(item, false) }">mdi-minus-box</v-icon>
             <v-edit-dialog
               :return-value.sync="item.quantidade"
@@ -165,21 +185,24 @@
               save-text="Salvar"
               @save="onUpdateQuantidadeOuValorUnitario(item)"
             >
-              <span class="mx-3">{{ item.quantidade }}</span>
+              <span class="mx-3 d-block text-center" style="min-width: 2rem">{{ item.quantidade }}</span>
               <template v-slot:input>
                 <text-field-monetary
                   v-model="item.quantidade"
                   single-line
                   :rules="[v => !!v || 'Insira a quantidade']"
                   :options="{precision: 0}"
+                  :min="1"
                 ></text-field-monetary>
               </template>
             </v-edit-dialog>
             <v-icon color="blue" size="20" @click="() => { item.quantidade++; onUpdateQuantidadeOuValorUnitario(item, false) }">mdi-plus-box</v-icon>
           </div>
+          <span v-else>{{ item.quantidade }}</span>
         </template>
         <template v-slot:[`item.valor_un`]="{item}">
           <v-edit-dialog
+            v-if="encerrado_em === null"
             :return-value.sync="item.valor_un"
             large
             cancel-text="Cancelar"
@@ -196,9 +219,11 @@
               ></text-field-monetary>
             </template>
           </v-edit-dialog>
+          <span v-else style="white-space: nowrap">R$ {{ item.valor_un ? formatoMonetario(item.valor_un) : '0,00' }}</span>
         </template>
         <template v-slot:[`item.valor`]="{item}">
           <v-edit-dialog
+            v-if="encerrado_em === null"
             :return-value.sync="item.valor"
             large
             cancel-text="Cancelar"
@@ -215,9 +240,10 @@
               ></text-field-monetary>
             </template>
           </v-edit-dialog>
+          <span v-else style="white-space: nowrap">R$ {{ item.valor ? formatoMonetario(item.valor) : '0,00' }}</span>
         </template>
         <template v-slot:[`item.acoes`]="{item}">
-          <v-icon color="red" @click="removerItem(item)">mdi-close-circle</v-icon>
+          <v-icon color="red" @click="removerItem(item)" :disabled="encerrado_em !== null">mdi-close-circle</v-icon>
         </template>
         <template v-slot:foot>
           <tfoot>
@@ -233,9 +259,14 @@
         </template>
       </v-data-table>
     </v-card>
-    <div class="text-center my-4">
-      <v-btn small color="success" :loading="enviandoVenda" @click="salvarVenda">
-        <v-icon dense class="mr-1">mdi-content-save</v-icon> Salvar
+    <div class="text-center my-4" v-if="encerrado_em === null">
+      <v-btn color="success" small :loading="enviandoVenda" :disabled="encerrandoVenda" @click="salvarVenda">
+        <v-icon dense class="mr-1">mdi-content-save</v-icon>
+        {{ id ? 'Salvar alterações' : 'Salvar' }}
+      </v-btn>
+      <v-btn v-if="id" color="error" class="ml-2" small :disabled="enviandoVenda || encerrandoVenda" @click="dialogEncerrar = true">
+        <v-icon dense class="mr-1">mdi-lock</v-icon>
+        Encerrar
       </v-btn>
     </div>
     <v-dialog v-model="dialogPesquisarCadastro" width="40rem">
@@ -314,6 +345,7 @@
           :headers="tableRfidHeaders"
           :items="tableRfiditems"
           :loading="vinculandoRfid"
+          no-data-text="Nenhum dispositivo vinculado a esta venda"
         >
           <template v-slot:[`item.criado_em`]="{item}">{{ moment(item.criado_em).format('DD/MM/YYYY HH:mm') }}</template>
           <template v-slot:[`item.acoes`]="{item}">
@@ -321,7 +353,33 @@
           </template>
         </v-data-table>
         <v-card-actions class="justify-center">
-          <v-btn color="secondary" small depressed @click="dialogRfidLista = false">Fechar</v-btn>
+          <v-btn color="primary" small depressed @click="dialogRfidLista = false">Fechar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="dialogEncerrar" width="32rem" :persistent="encerrandoVenda">
+      <v-card>
+        <v-toolbar color="error" dense dark flat>
+          <v-toolbar-title>Encerrar a venda</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-toolbar-items>
+            <v-btn @click="dialogEncerrar = false" icon>
+              <v-icon>mdi-close</v-icon>
+            </v-btn>
+          </v-toolbar-items>
+        </v-toolbar>
+        <v-card-text class="pb-0">
+          <div class="text-center my-4">
+            <v-icon size="64" color="error">mdi-lock-alert</v-icon>
+          </div>
+          <p class="body-1 text-justify">Ao encerrar uma venda ela fica <strong class="primary--text">protegida</strong>
+            para não sofrer mais nenhuma <strong class="primary--text">alteração</strong>. Mas ela vai permanecer
+            disponível para consulta.</p>
+          <p class="body-1 red--text text-center">Tem certeza que deseja prosseguir?</p>
+        </v-card-text>
+        <v-card-actions class="justify-center">
+          <v-btn color="primary" small depressed outlined :disabled="encerrandoVenda" @click="dialogEncerrar = false">Cancelar</v-btn>
+          <v-btn color="error" small depressed :loading="encerrandoVenda" @click="encerrarVenda">Prosseguir</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -350,6 +408,7 @@ export default {
     cadastro: null, //Cadastro vinculado a esta venda
     visitas: null, //numero que representa a sequencia desta venda dentre todas as vendas deste cliente.
     criado_em: null,
+    encerrado_em: null,
     iptClienteId: null,
     iptCliente: '',
     iptNota: '',
@@ -391,6 +450,8 @@ export default {
       {value: 'acoes', text: 'DESVINCULAR', align: 'center', sortable: false, filterable: false},
     ],
     tableRfiditems: [],
+    dialogEncerrar: false,
+    encerrandoVenda: false,
   }),
   computed: {
     valorTotal() {
@@ -412,13 +473,16 @@ export default {
           this.cadastro = data.cadastro;
           this.visitas = data.visita;
           this.criado_em = data.criado_em;
+          this.encerrado_em = data.encerrado_em;
           this.iptCliente = data.cliente;
           this.iptNota = data.nota;
           this.iptCredito = data.credito;
           this.tableItems = data.itens;
         } else {
           this.cadastro = null;
+          this.visitas = null;
           this.criado_em = null;
+          this.encerrado_em = null;
           this.iptCliente = '';
           this.iptNota = '';
           this.iptCredito = '0';
@@ -461,6 +525,28 @@ export default {
         this.enviandoVenda = false;
       }
     },
+    async encerrarVenda() {
+      if (!this.id) return;
+      this.encerrandoVenda = true;
+      try {
+        const webclient = http();
+        const payload = {
+          id: this.id,
+          cliente: this.iptCliente,
+          cadastro: this.cadastro ? this.cadastro : this.iptClienteId,
+          nota: this.iptNota,
+          credito: this.iptCredito,
+          itens: this.tableItems,
+          remover: this.itemsRemover
+        };
+        await webclient.post('vendas', payload); //primeiro atualiza a venda
+        await webclient.put('vendas', {'id': this.id});
+        this.encerrado_em = moment().format('YYYY-MM-DD HH:mm:ss');
+        this.dialogEncerrar = false;
+      } finally {
+        this.encerrandoVenda = false;
+      }
+    },
     iptProdutoFiltro(item, queryText, itemText) {
       if (item.codigo && item.codigo === queryText) return true;
       return itemText.toLocaleLowerCase().indexOf(queryText.toLocaleLowerCase()) > -1
@@ -468,11 +554,13 @@ export default {
     selecionarCadastro(item) {
       this.iptClienteId = item.id;
       this.iptCliente = item.nome;
+      this.visitas = item.vendas + 1;
       this.dialogPesquisarCadastro = false;
     },
     desvincularCadastro() {
       this.iptClienteId = null;
       this.iptCliente = '';
+      this.visitas = null;
     },
     async pesquisarCadastroPorDigital() {
       if (!this.existeCadastroComDigital || !this.biometriaDisponivel) return;
@@ -550,7 +638,7 @@ export default {
       }
     },
     onUpdateQuantidadeOuValorUnitario(item, emitirSnack = true) {
-      if (item.quantidade < 0) item.quantidade = 0;
+      if (item.quantidade < 1) item.quantidade = 1;
       item.valor = item.valor_un * item.quantidade;
       if (emitirSnack) this.$store.commit('showSnackbar', {color: 'info', text: 'VALOR TOTAL FOI RECALCULADO'});
     },

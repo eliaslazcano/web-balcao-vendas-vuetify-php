@@ -81,6 +81,7 @@
         <template v-slot:[`item.cliente`]="{item}">
           <span v-if="item.cliente">{{ item.cliente }}</span>
           <span v-else class="grey--text">SEM NOME</span>
+          <v-icon color="red" class="ml-1" small v-if="item.encerrado_em !== null">mdi-lock</v-icon>
         </template>
         <template v-slot:[`item.debito`]="{item}">
           <span v-if="!item.debito && !item.credito" class="grey--text">R$ {{ formatoMonetario(item.credito) }}</span>

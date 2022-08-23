@@ -30,6 +30,7 @@ export default {
   model: { prop: 'value', event: 'input' },
   props: {
     value: {type: [String, Number], default: '0'},
+    min: {type: Number, default: null},
     label: { type: String, default: ''},
     placeholder: {type: String, default: undefined},
     persistentPlaceholder: {type: Boolean, default: false},
@@ -66,7 +67,9 @@ export default {
         return this.value !== null && this.value !== '' ? this.humanFormat(this.value.toString()) : this.valueWhenIsEmpty;
       },
       set: function(newValue) {
-        this.$emit('input', Number(this.machineFormat(newValue)));
+        const x = Number(this.machineFormat(newValue));
+        const y = this.min && this.min > x ? this.min : x;
+        this.$emit('input', y);
       },
     },
   },
