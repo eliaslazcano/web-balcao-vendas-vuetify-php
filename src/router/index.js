@@ -16,6 +16,12 @@ const routes = [
     component: () => import('../views/ClientesLista.vue')
   },
   {
+    path: '/cliente/:id',
+    name: 'cliente',
+    props: true,
+    component: () => import('../views/ClienteFicha.vue')
+  },
+  {
     path: '/produtos',
     name: 'produtos',
     component: () => import('../views/ProdutosLista.vue')

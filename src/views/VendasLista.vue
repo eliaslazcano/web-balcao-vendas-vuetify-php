@@ -51,6 +51,7 @@
         <v-text-field
           label="Pesquisar"
           prepend-inner-icon="mdi-magnify"
+          placeholder="Nome do cliente ou número da venda"
           v-model="tableSearch"
           :autofocus="$vuetify.breakpoint.mdAndUp"
           :hint="$vuetify.breakpoint.mdAndUp && rfid_disponivel ? 'Pressione F2 para buscar por aproximação' : undefined"
@@ -80,6 +81,7 @@
         <template v-slot:[`item.cliente`]="{item}">
           <span v-if="item.cliente">{{ item.cliente }}</span>
           <span v-else class="grey--text">SEM NOME</span>
+          <v-icon color="red" class="ml-1" small v-if="item.encerrado_em !== null">mdi-lock</v-icon>
         </template>
         <template v-slot:[`item.debito`]="{item}">
           <span v-if="!item.debito && !item.credito" class="grey--text">R$ {{ formatoMonetario(item.credito) }}</span>
@@ -143,7 +145,7 @@ export default {
     tableLoading: true,
     tableHeaders: [
       {value: 'id', text: 'Nº', width: '6rem'},
-      {value: 'criado_em', text: 'DATA', width: '11rem'},
+      {value: 'criado_em', text: 'DATA', width: '11rem', filterable: false},
       {value: 'cliente', text: 'CLIENTE'},
       {value: 'debito', text: 'VALOR', cellClass: 'text-no-wrap', filterable: false},
       {value: 'acoes', text: 'ABRIR', align: 'center', cellClass: 'text-no-wrap', sortable: false, filterable: false},

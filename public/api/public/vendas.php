@@ -1,4 +1,9 @@
 <?php
+/**
+ * GET: lista as vendas cadastradas, ou apenas a venda do ID informado.
+ * POST: cria ou atualiza a venda do ID informado.
+ * PUT: encerra/trava a venda informada, tornando ela somente-leitura.
+ */
 
 use App\Helper\HttpHelper;
 use App\Database\DbApp;
@@ -9,19 +14,25 @@ $db = new DbApp();
 if (HttpHelper::isGet()) {
   $id = HttpHelper::obterParametro('id');
   if ($id) {
-    $sql = 'SELECT v.id, COALESCE(c.nome, v.cliente) AS cliente, v.cadastro, v.nota, v.credito, v.criado_em FROM vendas v LEFT JOIN clientes c ON v.cadastro = c.id WHERE v.id = :id';
+    $sql = 'SELECT v.id, COALESCE(c.nome, v.cliente) AS cliente, v.cadastro, v.nota, v.credito, v.criado_em, v.encerrado_em FROM vendas v LEFT JOIN clientes c ON v.cadastro = c.id WHERE v.id = :id';
     $x = $db->queryPrimeiraLinha($sql, [':id' => $id], ['id','cadastro','credito']);
     if (!$x)HttpHelper::erroJson(400, 'Venda não encontrada');
     $x['itens'] = $db->query('SELECT v.id, v.produto, p.nome AS produto_nome, v.quantidade, v.valor_un, v.valor FROM venda_itens v INNER JOIN produtos p on v.produto = p.id WHERE v.venda = :id', [':id' => $id], ['id','produto','quantidade','valor_un','valor']);
+    if ($x['cadastro']) {
+      $sql = 'SELECT c.id, COUNT(v.id) as visitas FROM clientes c LEFT JOIN vendas v on c.id = v.cadastro WHERE c.id = :cliente AND v.criado_em <= :data GROUP BY c.id';
+      $visitas = $db->queryPrimeiraLinha($sql, [':cliente' => $x['cadastro'], ':data' => $x['criado_em']], ['visitas']);
+      $x['visita'] = $visitas['visitas'];
+    }
   }
   else {
     $data_inicio = HttpHelper::obterParametro('data_inicio') ?: '1900-01-01 00:00:00';
     $data_fim = HttpHelper::obterParametro('data_fim') ?: date('Y-m-d H:i:s');
-    $sql = 'SELECT v.id, COALESCE(c.nome, v.cliente) AS cliente, v.criado_em, COALESCE(SUM(vi.valor),0) AS debito, v.credito FROM vendas v LEFT JOIN clientes c ON v.cadastro = c.id LEFT JOIN venda_itens vi ON v.id = vi.venda WHERE v.deletado_em IS NULL AND v.criado_em BETWEEN :inicio AND :fim GROUP BY v.id';
+    $sql = 'SELECT v.id, COALESCE(c.nome, v.cliente) AS cliente, v.criado_em, v.encerrado_em, COALESCE(SUM(vi.valor),0) AS debito, v.credito FROM vendas v LEFT JOIN clientes c ON v.cadastro = c.id LEFT JOIN venda_itens vi ON v.id = vi.venda WHERE v.deletado_em IS NULL AND v.criado_em BETWEEN :inicio AND :fim GROUP BY v.id';
     $x = $db->query($sql, [':inicio' => $data_inicio, ':fim' => $data_fim], ['id', 'debito', 'credito']);
   }
   HttpHelper::emitirJson($x);
-} elseif (HttpHelper::isPost()) {
+}
+elseif (HttpHelper::isPost()) {
   $id = HttpHelper::obterParametro('id');
   $cliente = HttpHelper::validarParametro('cliente');
   $cadastro = HttpHelper::validarParametro('cadastro');
@@ -55,4 +66,9 @@ if (HttpHelper::isGet()) {
   }
 
   HttpHelper::emitirJson(['id' => intval($id), 'itens' => $itens, 'remover' => $remover]);
+}
+elseif (HttpHelper::isPut()) {
+  sleep(3);
+  $id = HttpHelper::validarParametro('id');
+  $db->update('UPDATE vendas SET encerrado_em = CURRENT_TIMESTAMP WHERE id = :id', [':id' => $id]);
 }

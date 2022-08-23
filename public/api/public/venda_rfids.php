@@ -1,9 +1,15 @@
 <?php
+/**
+ * GET: obtem os dados do vinculo atual do RFID informado. (venda, data, cliente).
+ * POST: vincula o RFID informado a uma venda informada.
+ * DELETE: desvincula o RFID informado do seu vinculo atual.
+ * POST: lista os RFIDs vinculados a venda informada.
+ */
 
 use App\Helper\HttpHelper;
 use App\Database\DbApp;
 
-HttpHelper::validarMetodos(['GET','POST','DELETE']);
+HttpHelper::validarMetodos(['GET','POST','DELETE','PUT']);
 $db = new DbApp();
 
 if (HttpHelper::isGet()) {
@@ -17,7 +23,8 @@ STR;
   $x = $db->queryPrimeiraLinha($sql, [':rfid' => $rfid], ['id','venda','cadastro']);
   HttpHelper::emitirJson($x ?: null);
 
-} elseif (HttpHelper::isPost()) {
+}
+elseif (HttpHelper::isPost()) {
   $venda = HttpHelper::validarParametro('venda');
   $rfid = HttpHelper::validarParametro('rfid');
 
@@ -31,8 +38,14 @@ STR;
   $x = $db->insert('INSERT INTO venda_rfids (rfid, venda) VALUES (:rfid, :venda)', [':rfid' => $rfid, ':venda' => $venda]);
   if (!$x) HttpHelper::erroJson(400, 'Não foi possível vincular o dispositivo a esta venda');
   HttpHelper::emitirJson(['id' => intval($x)]);
-} elseif (HttpHelper::isDelete()) {
+}
+elseif (HttpHelper::isDelete()) {
   $rfid = HttpHelper::validarParametro('rfid');
   $x = $db->update('UPDATE venda_rfids SET desvinculado_em = CURRENT_TIMESTAMP WHERE rfid = :rfid AND desvinculado_em IS NULL', [':rfid' => $rfid]);
   HttpHelper::emitirJson(['afetados' => $x]);
+}
+elseif (HttpHelper::isPut()) {
+  $venda = HttpHelper::validarParametro('venda');
+  $x = $db->query('SELECT id, rfid, criado_em FROM venda_rfids WHERE venda = :venda AND desvinculado_em IS NULL', [':venda' => $venda], ['id']);
+  HttpHelper::emitirJson($x);
 }

@@ -5,9 +5,12 @@ import {config} from '@/config';
 /**
  * Cria uma instância Axios com regras da aplicação.
  * @param {function(string, int?)} errorCallback - Callback com mensagem de erro para feedback.
+ * @param {?string} mensagemErroConexao - Mensagem de erro quando não houver conexão entre o cliente e o servidor.
  * @returns AxiosInstance
  */
-export const createWebClient = (errorCallback) => {
+export const createWebClient = (errorCallback, mensagemErroConexao = null) => {
+  if (!mensagemErroConexao) mensagemErroConexao = `Não foi possível te conectar com o servidor.\nPossíveis causas:\n- Você pode estar sem rede;\n- O serviço está em manutenção;\n- O serviço está fora do ar;`;
+
   //Axios Instance
   const axiosClient = axios.create({
     baseURL: config.http.requestBaseUrl,
@@ -24,7 +27,7 @@ export const createWebClient = (errorCallback) => {
   //Error Handle
   const onError = error => {
     if (error.code === 'ECONNABORTED') errorCallback('A conexão foi cancelada pelo dispositivo');
-    else if (error.code === 'ERR_NETWORK') errorCallback(`Não foi possível te conectar com o servidor.\nPossíveis causas:\n- Você pode estar sem rede;\n- O serviço está em manutenção;\n- O serviço está fora do ar;`);
+    else if (error.code === 'ERR_NETWORK') errorCallback(mensagemErroConexao);
     else if (error.response) {
       //if (error.response.status && error.response.status === 410 && deslogar) store.dispatch('signout');
       if (error.response.data) {
