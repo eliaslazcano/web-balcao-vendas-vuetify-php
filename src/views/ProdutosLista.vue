@@ -30,7 +30,14 @@
         </v-menu>
       </v-card-title>
       <v-card-text>
-        <v-text-field label="Pesquisar" prepend-inner-icon="mdi-magnify" v-model="tableSearch" hide-details :autofocus="$vuetify.breakpoint.mdAndUp"></v-text-field>
+        <v-text-field
+          label="Pesquisar"
+          prepend-inner-icon="mdi-magnify"
+          placeholder="Nome do produto ou código"
+          v-model="tableSearch"
+          hide-details
+          :autofocus="$vuetify.breakpoint.mdAndUp"
+        ></v-text-field>
       </v-card-text>
       <v-data-table
         :headers="tableHeaders"
@@ -45,6 +52,10 @@
       >
         <template v-slot:[`item.valor`]="{item}">
           <span style="white-space: nowrap">R$ {{ formatoMonetario(item.valor) }}</span>
+        </template>
+        <template v-slot:[`item.codigo`]="{item}">
+          <span v-if="item.codigo">{{ item.codigo }}</span>
+          <span v-else class="grey--text caption">NÃO POSSUI</span>
         </template>
         <template v-slot:[`item.acoes`]="{item}">
           <v-btn color="yellow darken-4" small icon @click="editarProduto(item)">
@@ -94,7 +105,7 @@ export default {
     loading: true,
     tableHeaders: [
       {value: 'nome', text: 'NOME', cellClass: 'text-no-wrap'},
-      {value: 'valor', text: 'VALOR UN.'},
+      {value: 'valor', text: 'VALOR UN.', filterable: false},
       {value: 'codigo', text: 'CODIGO'},
       {value: 'acoes', text: 'AÇÕES', align: 'center', cellClass: 'text-no-wrap', sortable: false, filterable: false},
     ],

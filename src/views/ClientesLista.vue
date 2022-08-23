@@ -33,7 +33,7 @@
         <v-text-field
           label="Pesquisar"
           prepend-inner-icon="mdi-magnify"
-          placeholder="Código ou Nome"
+          placeholder="Nome do cliente ou código"
           persistent-placeholder
           v-model="tableSearch"
           :autofocus="$vuetify.breakpoint.mdAndUp"
@@ -61,7 +61,7 @@
       >
         <template v-slot:[`item.nome`]="{item}">
           <router-link :to="'/cliente/' + item.id">{{ item.nome }}</router-link>
-          <v-icon v-if="biometriaDisponivel && !!item.digital" dense>mdi-fingerprint</v-icon>
+          <v-icon v-if="biometriaDisponivel && !!item.digital" dense class="ml-1">mdi-fingerprint</v-icon>
         </template>
         <template v-slot:[`item.criado_em`]="{item}">
           <span v-if="item.criado_em">{{ moment(item.criado_em).format('DD/MM/YYYY') }}</span>
@@ -135,7 +135,17 @@
     <v-dialog v-model="dialogEditarCadastro" width="32rem" :persistent="tableLoading">
       <v-card>
         <v-form ref="form-cadastro" @submit.prevent="salvarCadastro" :disabled="tableLoading">
-          <v-card-title>{{ iptId ? 'Editar' : 'Criar' }} cadastro</v-card-title>
+          <v-card-title class="justify-space-between">
+            <span>{{ iptId ? 'Editar' : 'Criar' }} cadastro</span>
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn icon color="primary" v-bind="attrs" v-on="on" :to="'/cliente/' + iptId">
+                  <v-icon>mdi-open-in-new</v-icon>
+                </v-btn>
+              </template>
+              <span>Ver a ficha completa</span>
+            </v-tooltip>
+          </v-card-title>
           <v-card-subtitle v-if="!!iptId">Cod. {{ iptId }}</v-card-subtitle>
           <v-card-text>
             <v-text-field

@@ -13,6 +13,11 @@ if (HttpHelper::isGet()) {
     $x = $db->queryPrimeiraLinha($sql, [':id' => $id], ['id','cadastro','credito']);
     if (!$x)HttpHelper::erroJson(400, 'Venda não encontrada');
     $x['itens'] = $db->query('SELECT v.id, v.produto, p.nome AS produto_nome, v.quantidade, v.valor_un, v.valor FROM venda_itens v INNER JOIN produtos p on v.produto = p.id WHERE v.venda = :id', [':id' => $id], ['id','produto','quantidade','valor_un','valor']);
+    if ($x['cadastro']) {
+      $sql = 'SELECT c.id, COUNT(v.id) as visitas FROM clientes c LEFT JOIN vendas v on c.id = v.cadastro WHERE c.id = :cliente AND v.criado_em <= :data GROUP BY c.id';
+      $visitas = $db->queryPrimeiraLinha($sql, [':cliente' => $x['cadastro'], ':data' => $x['criado_em']], ['visitas']);
+      $x['visita'] = $visitas['visitas'];
+    }
   }
   else {
     $data_inicio = HttpHelper::obterParametro('data_inicio') ?: '1900-01-01 00:00:00';

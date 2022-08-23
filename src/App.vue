@@ -89,6 +89,9 @@
               </v-list-item-content>
             </template>
             <v-list-item to="/relatorio/produtos_vendidos">
+              <v-list-item-icon>
+                <v-icon>mdi-menu-right</v-icon>
+              </v-list-item-icon>
               <v-list-item-content>
                 <v-list-item-title>Produtos Vendidos</v-list-item-title>
               </v-list-item-content>

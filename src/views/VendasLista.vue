@@ -51,6 +51,7 @@
         <v-text-field
           label="Pesquisar"
           prepend-inner-icon="mdi-magnify"
+          placeholder="Nome do cliente ou número da venda"
           v-model="tableSearch"
           :autofocus="$vuetify.breakpoint.mdAndUp"
           :hint="$vuetify.breakpoint.mdAndUp && rfid_disponivel ? 'Pressione F2 para buscar por aproximação' : undefined"
@@ -143,7 +144,7 @@ export default {
     tableLoading: true,
     tableHeaders: [
       {value: 'id', text: 'Nº', width: '6rem'},
-      {value: 'criado_em', text: 'DATA', width: '11rem'},
+      {value: 'criado_em', text: 'DATA', width: '11rem', filterable: false},
       {value: 'cliente', text: 'CLIENTE'},
       {value: 'debito', text: 'VALOR', cellClass: 'text-no-wrap', filterable: false},
       {value: 'acoes', text: 'ABRIR', align: 'center', cellClass: 'text-no-wrap', sortable: false, filterable: false},

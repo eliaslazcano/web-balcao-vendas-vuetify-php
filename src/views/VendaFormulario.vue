@@ -19,10 +19,22 @@
               </v-list-item-content>
             </v-list-item>
           </v-list>
+          <v-list class="py-0" dense>
+            <v-list-item @click="dialogRfidLista = true">
+              <v-list-item-icon>
+                <v-icon>mdi-credit-card-wireless-outline</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>RFIDs vinculados</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
         </v-menu>
       </v-card-title>
       <v-card-subtitle v-if="!!criado_em">Criado em {{ moment(criado_em).format('DD/MM/YYYY HH:mm') }}</v-card-subtitle>
       <v-card-text>
+        <v-alert v-if="visitas === 1" type="info" dense text>Esta é a primeira venda deste cliente</v-alert>
+        <v-alert v-else-if="visitas > 1" type="info" dense text>Esta é a {{ visitas }}ª venda deste cliente</v-alert>
         <v-form @submit.prevent :disabled="enviandoVenda">
           <v-row dense>
             <v-col cols="4" sm="3" md="2">
@@ -40,20 +52,31 @@
             </v-col>
             <v-col cols="8" sm="9" md="10">
               <v-text-field
+                v-if="!cadastro"
                 label="Cliente"
                 v-model="iptCliente"
-                :readonly="!!cadastro || !!iptClienteId"
                 placeholder="Nome do cliente"
                 persistent-placeholder
-                :append-outer-icon="cadastro ? undefined : 'mdi-account-search'"
+                append-outer-icon="mdi-account-search"
                 @click:append-outer="dialogPesquisarCadastro = true"
-                @keydown="(x) => {if (x.code === 'F2' && !cadastro) dialogPesquisarCadastro = true}"
-                :hint="$vuetify.breakpoint.mdAndUp && !cadastro ? 'Pressione F2 para buscar um cliente cadastrado' : undefined"
+                @keydown="(x) => {if (x.code === 'F2') dialogPesquisarCadastro = true}"
+                :hint="$vuetify.breakpoint.mdAndUp ? 'Pressione F2 para buscar um cliente cadastrado' : undefined"
+                clearable
                 @click:clear="desvincularCadastro"
-                :clearable="!cadastro"
                 :autofocus="$vuetify.breakpoint.mdAndUp"
-                :append-icon="cadastro ? 'mdi-open-in-new' : undefined"
+                :readonly="!!iptClienteId"
+                outlined
+                dense
+              ></v-text-field>
+              <v-text-field
+                v-else
+                label="Cliente"
+                v-model="iptCliente"
+                placeholder="Sem nome"
+                persistent-placeholder
+                append-icon="mdi-open-in-new"
                 @click:append="$router.push('/cliente/' + cadastro)"
+                readonly
                 outlined
                 dense
               ></v-text-field>
@@ -199,11 +222,9 @@
         <template v-slot:foot>
           <tfoot>
           <tr>
-            <td>
+            <td colspan="3">
               <p class="subtitle-2 primary--text mb-0">TOTAL</p>
             </td>
-            <td></td>
-            <td></td>
             <td colspan="2">
               <p class="subtitle-2 primary--text mb-0 text-no-wrap">R$ {{ formatoMonetario(valorTotal) }}</p>
             </td>
@@ -284,6 +305,26 @@
         </v-form>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="dialogRfidLista" width="32rem" :persistent="vinculandoRfid">
+      <v-card>
+        <v-card-title>RFIs vinculados</v-card-title>
+        <v-card-subtitle>Dispositivos de aproximação</v-card-subtitle>
+        <v-divider></v-divider>
+        <v-data-table
+          :headers="tableRfidHeaders"
+          :items="tableRfiditems"
+          :loading="vinculandoRfid"
+        >
+          <template v-slot:[`item.criado_em`]="{item}">{{ moment(item.criado_em).format('DD/MM/YYYY HH:mm') }}</template>
+          <template v-slot:[`item.acoes`]="{item}">
+            <v-icon color="red" @click="desvincularRfid(item.rfid)" :disabled="vinculandoRfid">mdi-close-circle</v-icon>
+          </template>
+        </v-data-table>
+        <v-card-actions class="justify-center">
+          <v-btn color="secondary" small depressed @click="dialogRfidLista = false">Fechar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <loading-dialog v-model="dialogLoading" :text="dialogLoadingText" width="400"></loading-dialog>
   </async-container>
 </template>
@@ -307,6 +348,7 @@ export default {
     moment,
     loading: true,
     cadastro: null, //Cadastro vinculado a esta venda
+    visitas: null, //numero que representa a sequencia desta venda dentre todas as vendas deste cliente.
     criado_em: null,
     iptClienteId: null,
     iptCliente: '',
@@ -331,6 +373,7 @@ export default {
     tableCadastrosHeaders: [
       {value: 'id', text: 'COD.', width: '6rem', cellClass: 'cursor-pointer'},
       {value: 'nome', text: 'NOME', cellClass: 'cursor-pointer text-no-wrap'},
+      {value: 'vendas', text: 'VENDAS', cellClass: 'cursor-pointer'},
     ],
     tableCadastrosItems: [],
     tableCadastrosSearch: '',
@@ -341,6 +384,13 @@ export default {
     dialogRfid: false,
     iptRfid: '',
     vinculandoRfid: false,
+    dialogRfidLista: false,
+    tableRfidHeaders: [
+      {value: 'criado_em', text: 'DATA'},
+      {value: 'rfid', text: 'CÓDIGO'},
+      {value: 'acoes', text: 'DESVINCULAR', align: 'center', sortable: false, filterable: false},
+    ],
+    tableRfiditems: [],
   }),
   computed: {
     valorTotal() {
@@ -360,6 +410,7 @@ export default {
         if (this.id) {
           const {data} = await webclient.get(`vendas?id=${this.id}`);
           this.cadastro = data.cadastro;
+          this.visitas = data.visita;
           this.criado_em = data.criado_em;
           this.iptCliente = data.cliente;
           this.iptNota = data.nota;
@@ -436,8 +487,6 @@ export default {
           const cadastro = this.tableCadastrosItems.find(i => i.id === resultado);
           if (cadastro) this.selecionarCadastro(cadastro);
         }
-      } catch (e) {
-        alert('Parece que não foi possível coletar a digital');
       } finally {
         this.dialogLoading = false;
       }
@@ -455,6 +504,18 @@ export default {
     },
     formatoMonetario(valor) {
       return StringHelper.monetaryFormat(valor);
+    },
+    async loadRfids() {
+      if (this.id) {
+        this.vinculandoRfid = true;
+        try {
+          const webclient = http();
+          const {data} = await webclient.put('venda_rfids', {venda: this.id});
+          this.tableRfiditems = data;
+        } finally {
+          this.vinculandoRfid = false;
+        }
+      }
     },
     async vincularRfid() {
       if (!this.rfidDisponivel || !this.iptRfid) return;
@@ -474,6 +535,17 @@ export default {
         else this.$store.commit('showSnackbar', {color: 'success', text: 'Dispositivo vinculado!'});
       } finally {
         this.dialogRfid = false;
+        this.vinculandoRfid = false;
+      }
+    },
+    async desvincularRfid(rfid) {
+      if (!confirm('Deseja desvincular esse RFID?')) return;
+      this.vinculandoRfid = true;
+      try {
+        const webclient = http();
+        await webclient.delete(`venda_rfids?rfid=${rfid}`);
+        await this.loadRfids();
+      } finally {
         this.vinculandoRfid = false;
       }
     },
@@ -529,6 +601,9 @@ export default {
     },
     dialogRfid(v) {
       if (!v) this.iptRfid = '';
+    },
+    dialogRfidLista(v) {
+      if (v) this.loadRfids();
     },
   }
 }

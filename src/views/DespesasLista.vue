@@ -39,7 +39,7 @@
       </v-card-title>
       <v-card-text>
         <v-slide-y-transition>
-          <v-row v-if="iptFiltrarData">
+          <v-row v-if="iptFiltrarData" class="mb-2">
             <v-col cols="12" md="6">
               <date-picker-br inline no-buttons outlined dense hide-details v-model="iptDataInicial" label="Data inicial" prepend-inner-icon="mdi-calendar-arrow-right" :disabled="!iptFiltrarData"></date-picker-br>
             </v-col>
@@ -51,6 +51,7 @@
         <v-text-field
           label="Pesquisar"
           prepend-inner-icon="mdi-magnify"
+          placeholder="Descrição ou valor"
           v-model="tableSearch"
           hide-details
           :autofocus="$vuetify.breakpoint.mdAndUp"
@@ -84,15 +85,12 @@
         <template v-slot:foot>
           <tfoot>
           <tr>
-            <td>
+            <td colspan="2">
               <p class="subtitle-2 primary--text mb-0">TOTAL</p>
             </td>
-            <td></td>
-            <td>
-              <p class="subtitle-2 primary--text mb-0">R$ {{ valorTotal.toFixed(2) }}</p>
+            <td colspan="3">
+              <p class="subtitle-2 primary--text mb-0">R$ {{ formatoMonetario(valorTotal) }}</p>
             </td>
-            <td></td>
-            <td></td>
           </tr>
           </tfoot>
         </template>
@@ -110,9 +108,9 @@
           <v-card-text>
             <v-text-field label="Descrição" v-model="iptDescricao" outlined dense :rules="[v => (!!v && !!v.trim()) || 'Coloque a descrição']"></v-text-field>
             <text-field-monetary label="Valor" v-model="iptValor" prefix="R$" outlined dense></text-field-monetary>
-            <v-textarea label="Observações" v-model="iptObservacao" outlined dense></v-textarea>
+            <v-textarea label="Observações" v-model="iptObservacao" outlined dense hide-details></v-textarea>
           </v-card-text>
-          <v-card-actions class="justify-center">
+          <v-card-actions class="justify-center pt-0">
             <v-btn color="secondary" small depressed :disabled="salvandoItem" @click="dialogEditar = false">
               Fechar
             </v-btn>
@@ -143,7 +141,7 @@ export default {
       {value: 'id', text: 'COD.'},
       {value: 'descricao', text: 'DESCRICAO'},
       {value: 'valor', text: 'VALOR', cellClass: 'text-no-wrap'},
-      {value: 'criado_em', text: 'DATA', cellClass: 'text-no-wrap'},
+      {value: 'criado_em', text: 'DATA', cellClass: 'text-no-wrap', filterable: false},
       {value: 'acoes', text: 'AÇÕES', align: 'center', cellClass: 'text-no-wrap', sortable: false, filterable: false},
     ],
     tableDense: false,

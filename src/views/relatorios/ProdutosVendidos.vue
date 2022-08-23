@@ -76,7 +76,7 @@ export default {
     tableHeaders: [
       {value: 'nome', text: 'PRODUTO'},
       {value: 'quantidade', text: 'QUANTIDADE'},
-      {value: 'valor', text: 'VALOR'},
+      {value: 'valor', text: 'ARRECADAÇÃO'},
     ],
     tableItems: [],
     tableSearch: '',
