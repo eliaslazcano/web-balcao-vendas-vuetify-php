@@ -27,6 +27,7 @@ if (HttpHelper::isGet()) {
   if ($id) {
     $sql = 'UPDATE clientes SET nome = UPPER(:nome), categoria = :categoria, digital = :digital WHERE id = :id';
     $x = $db->update($sql, [':nome' => $nome, ':categoria' => $categoria, ':digital' => $digital ?: null, ':id' => $id]);
+    $db->update('UPDATE vendas SET cliente = :nome WHERE cadastro = :cadastro',  [':nome' => $nome, ':cadastro' => $id]);
     HttpHelper::emitirJson(!!$x);
   } else {
     $sql = 'INSERT INTO clientes (nome, categoria, digital) VALUES (UPPER(:nome), :categoria, :digital)';
