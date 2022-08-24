@@ -99,6 +99,17 @@
                 <v-icon>mdi-bottle-soda-classic-outline</v-icon>
               </v-list-item-icon>
             </v-list-item>
+            <v-list-item to="/relatorio/fluxocaixa">
+              <v-list-item-icon>
+                <v-icon>mdi-menu-right</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>Fluxo de caixa</v-list-item-title>
+              </v-list-item-content>
+              <v-list-item-icon>
+                <v-icon>mdi-plus-minus-variant</v-icon>
+              </v-list-item-icon>
+            </v-list-item>
           </v-list-group>
         </v-list-item-group>
       </v-list>

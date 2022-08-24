@@ -48,6 +48,11 @@ const routes = [
     component: () => import('../views/relatorios/ProdutosVendidos.vue')
   },
   {
+    path: '/relatorio/fluxocaixa',
+    name: 'relatorio-caixa',
+    component: () => import('../views/relatorios/FluxoCaixa.vue')
+  },
+  {
     path: '/suporte',
     name: 'suporte',
     component: () => import('../views/SuporteContato.vue')
