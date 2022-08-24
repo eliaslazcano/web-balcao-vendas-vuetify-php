@@ -202,6 +202,16 @@
               <v-icon>mdi-open-in-new</v-icon>
             </v-btn>
           </template>
+          <template v-slot:foot>
+            <tfoot>
+            <tr>
+              <th colspan="5" class="text-center">
+                <span class="success--text">Arrecadado R$ {{formatoMonetario(totalArrecadado)}}</span> /
+                <span class="error--text">Pendente R$ {{formatoMonetario(totalPendente)}}</span>
+              </th>
+            </tr>
+            </tfoot>
+          </template>
         </v-data-table>
       </v-card>
     </div>
@@ -328,7 +338,7 @@ export default {
 
     tbVendasHeaders: [
       {value: 'criado_em', text: 'DATA', width: '9.2rem', cellClass: 'text-no-wrap'},
-      {value: 'id', text: 'COD. VENDA'},
+      {value: 'id', text: 'VENDA Nº'},
       {value: 'debito', text: 'VALOR', cellClass: 'text-no-wrap'},
       {value: 'acoes', text: 'ABRIR', width: '5.4rem', align: 'center', sortable: false, filterable: false},
     ],
@@ -351,6 +361,16 @@ export default {
       v => (!!v && StringHelper.extractNumbers(v).length > 0) || 'O logradouro está sem o número',
     ],
   }),
+  computed: {
+    totalArrecadado() {
+      return this.tbVendasItems.reduce((previousValue, currentValue) => previousValue + currentValue.credito, 0);
+    },
+    totalPendente() {
+      return this.tbVendasItems.reduce(
+        (previousValue, currentValue) => previousValue + (currentValue.credito >= currentValue.debito ? 0 : (currentValue.debito - currentValue.credito))
+        , 0);
+    },
+  },
   methods: {
     async loadBasico() {
       this.loadingBasico = true;

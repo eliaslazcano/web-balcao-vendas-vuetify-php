@@ -26,6 +26,14 @@
                 <v-list-item-title>{{ iptFiltrarData ? 'Não filtrar a data' : 'Filtrar a data' }}</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
+            <v-list-item @click="ocultarEncerradas = !ocultarEncerradas">
+              <v-list-item-icon>
+                <v-icon>{{ ocultarEncerradas ? 'mdi-lock-open-check' : 'mdi-lock-minus' }}</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>{{ ocultarEncerradas ? 'Mostrar vendas encerradas' : 'Ocultar vendas encerradas' }}</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
             <v-list-item @click="imprimir">
               <v-list-item-icon>
                 <v-icon>mdi-printer</v-icon>
@@ -66,7 +74,7 @@
       </v-card-text>
       <v-data-table
         :headers="tableHeaders"
-        :items="tableItems"
+        :items="tableItemsFiltered"
         :search="tableSearch"
         :loading="tableLoading"
         :dense="tableDense"
@@ -93,6 +101,16 @@
           <v-btn color="primary" small icon :to="'/venda/' + item.id">
             <v-icon>mdi-open-in-new</v-icon>
           </v-btn>
+        </template>
+        <template v-slot:foot>
+          <tfoot>
+          <tr>
+            <th colspan="5" class="text-center">
+              <span class="success--text">Arrecadado R$ {{formatoMonetario(totalArrecadado)}}</span> /
+              <span class="error--text">Pendente R$ {{formatoMonetario(totalPendente)}}</span>
+            </th>
+          </tr>
+          </tfoot>
         </template>
       </v-data-table>
     </v-card>
@@ -156,11 +174,26 @@ export default {
     iptDataInicial: moment().format('YYYY-01-01'),
     iptDataFinal: moment().format('YYYY-MM-DD'),
     iptFiltrarData: true,
+    ocultarEncerradas: false,
     rfid_disponivel: config.rfid,
     dialogRfid: false,
     buscandoRfid: false,
     iptRfid: '',
   }),
+  computed: {
+    tableItemsFiltered() {
+      if (this.ocultarEncerradas) return this.tableItems.filter(i => !i.encerrado_em);
+      else return this.tableItems;
+    },
+    totalArrecadado() {
+      return this.tableItemsFiltered.reduce((previousValue, currentValue) => previousValue + currentValue.credito, 0);
+    },
+    totalPendente() {
+      return this.tableItemsFiltered.reduce(
+        (previousValue, currentValue) => previousValue + (currentValue.credito >= currentValue.debito ? 0 : (currentValue.debito - currentValue.credito))
+        , 0);
+    },
+  },
   methods: {
     imprimir() {
       setTimeout(() => window.print(), 500);
