@@ -108,7 +108,7 @@ create table usuarios
 	nome varchar(192) null,
 	email varchar(100) null,
 	criado_em datetime default current_timestamp() not null,
-	inativado_em datetime default current_timestamp() null,
+	inativado_em datetime default null,
 	constraint login
 		unique (login)
 );
