@@ -99,6 +99,34 @@ create table produtos
 	deletado_em datetime null
 );
 
+create table usuarios
+(
+	id int unsigned auto_increment
+		primary key,
+	login varchar(64) null,
+	senha varchar(32) null,
+	nome varchar(192) null,
+	email varchar(100) null,
+	criado_em datetime default current_timestamp() not null,
+	inativado_em datetime default current_timestamp() null,
+	constraint login
+		unique (login)
+);
+
+create table sessoes
+(
+	id int unsigned auto_increment
+		primary key,
+	usuario int unsigned not null,
+	datahora datetime default current_timestamp() not null,
+	ip varchar(15) null,
+	agente varchar(196) null,
+	chave varchar(32) null,
+	constraint sessoes_usuarios_id_fk
+		foreign key (usuario) references usuarios (id)
+			on update cascade on delete cascade
+);
+
 create table vendas
 (
 	id int unsigned auto_increment

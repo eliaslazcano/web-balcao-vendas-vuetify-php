@@ -1,8 +1,16 @@
 <template>
   <v-app>
-    <v-app-bar app clipped-left dense dark :color="$vuetify.theme.dark ? 'secondary' : 'primary'" class="d-print-none">
+    <v-app-bar
+      v-if="!$route.meta.hideAppBar"
+      app
+      clipped-left
+      dense
+      dark
+      :color="$vuetify.theme.dark ? 'secondary' : 'primary'"
+      class="d-print-none"
+    >
       <v-app-bar-nav-icon @click.stop="mostrarMenu = !mostrarMenu" />
-      <v-toolbar-title v-if="nome_empresa">{{ nome_empresa }}</v-toolbar-title>
+      <v-toolbar-title v-if="config.nome_empresa">{{ config.nome_empresa }}</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-btn to="/venda" text>
         <span class="mr-2" v-if="$vuetify.breakpoint.mdAndUp">Vender</span>
@@ -32,11 +40,33 @@
               <v-list-item-title>Suporte</v-list-item-title>
             </v-list-item-content>
           </v-list-item>
+          <v-divider></v-divider>
+          <v-list-item v-if="config.login" @click="$store.dispatch('logout')">
+            <v-list-item-icon>
+              <v-icon color="error">mdi-connection</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>Desconectar</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
         </v-list>
       </v-menu>
     </v-app-bar>
 
-    <v-navigation-drawer app clipped v-model="mostrarMenu">
+    <v-navigation-drawer app clipped v-model="mostrarMenu" v-if="!$route.meta.hideNavigationDrawer">
+      <template v-if="config.login" v-slot:prepend>
+        <v-list-item dense to="/perfil">
+          <v-list-item-avatar class="justify-center">
+            <v-avatar color="primary">
+              <v-icon color="white">mdi-account</v-icon>
+            </v-avatar>
+          </v-list-item-avatar>
+          <v-list-item-content v-if="$store.getters.sessionPayload">
+            <v-list-item-title>{{ $store.getters.sessionPayload.nome }}</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-divider></v-divider>
+      </template>
       <v-list nav dense>
         <v-list-item-group color="primary">
           <v-list-item to="/">
@@ -142,8 +172,8 @@ import {config} from '@/config';
 export default {
   name: 'App',
   data: () => ({
+    config,
     mostrarMenu: null,
-    nome_empresa: config.nome_empresa,
   }),
   methods: {
     changeDarkMode() {
