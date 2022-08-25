@@ -6,6 +6,6 @@ export const config = {
   },
   nome_empresa: 'Bar JK', //string. Nome exibido na barra de ferramentas;
   login: true, //boolean. Habilita o sistema de login para acessar o app;
-  biometria: true, //boolean. Habilita a interface para interagir com os leitores da Nitgen;
-  rfid: true, //boolean. Habilita a interface para interagir com leitores de RFID (aproximacao);
+  biometria: false, //boolean. Habilita a interface para interagir com os leitores da Nitgen;
+  rfid: false, //boolean. Habilita a interface para interagir com leitores de RFID (aproximacao);
 };
