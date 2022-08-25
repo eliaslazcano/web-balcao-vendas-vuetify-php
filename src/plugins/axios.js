@@ -29,7 +29,7 @@ export const createWebClient = (errorCallback, mensagemErroConexao = null) => {
     if (error.code === 'ECONNABORTED') errorCallback('A conexão foi cancelada pelo dispositivo');
     else if (error.code === 'ERR_NETWORK') errorCallback(mensagemErroConexao);
     else if (error.response) {
-      //if (error.response.status && error.response.status === 410 && deslogar) store.dispatch('signout');
+      if (error.response.status && error.response.status === 410) store.dispatch('logout');
       if (error.response.data) {
         if (typeof error.response.data === 'object' && error.response.data instanceof Blob && error.response.data.type === 'application/json') {
           const fileReader = new FileReader();

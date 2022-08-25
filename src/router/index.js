@@ -1,6 +1,9 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 import HomeView from '../views/HomeView.vue';
+import LoginView from '../views/LoginView.vue';
+import {config} from '@/config';
+import store from '@/store';
 
 Vue.use(VueRouter);
 
@@ -9,6 +12,18 @@ const routes = [
     path: '/',
     name: 'home',
     component: HomeView
+  },
+  {
+    path: '/login',
+    name: 'login',
+    meta: { hideAppBar: true, hideNavigationDrawer: true },
+    component: LoginView
+  },
+  {
+    path: '/perfil',
+    name: 'perfil',
+    meta: { requiresAuth: true },
+    component: () => import('../views/GerenciarPerfil.vue')
   },
   {
     path: '/clientes',
@@ -61,6 +76,24 @@ const routes = [
 
 const router = new VueRouter({
   routes
+});
+
+router.beforeEach((to, from, next) => {
+  if (to.matched.some(record => record.meta.requiresAuth)) {
+    if (!store.state.token) next('/login');
+  }
+  if (config.login) {
+    if (store.state.token) {
+      if (to.name === 'login') next('/');
+      else next();
+    } else {
+      if (to.name === 'login') next();
+      else next('/login');
+    }
+  } else {
+    if (to.name === 'login') next('/');
+    else next();
+  }
 });
 
 export default router;
