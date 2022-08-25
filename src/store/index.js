@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import router from '@/router'
 
 Vue.use(Vuex)
 
@@ -8,8 +9,19 @@ export default new Vuex.Store({
     snackbarShow: false,
     snackbarColor: 'primary',
     snackbarText: '',
+    token: null,
   },
   getters: {
+    sessionPayload(state) {
+      if (!state.token) return null;
+      const partes = state.token.split('.');
+      if (partes.length !== 3) return null;
+      try {
+        return JSON.parse(window.atob(partes[1]));
+      } catch (e) {
+        return null;
+      }
+    }
   },
   mutations: {
     showSnackbar(state, snackbar) {
@@ -20,8 +32,15 @@ export default new Vuex.Store({
     hideSnackbar(state) {
       state.snackbarShow = false;
     },
+    setToken(state, token) {
+      state.token = token;
+    },
   },
   actions: {
+    logout({ commit }) {
+      commit('setToken', null);
+      return router.push('/login');
+    },
   },
   modules: {
   }
