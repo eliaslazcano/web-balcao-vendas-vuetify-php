@@ -16,28 +16,36 @@
         <span class="mr-2" v-if="$vuetify.breakpoint.mdAndUp">Vender</span>
         <v-icon>mdi-cart</v-icon>
       </v-btn>
-      <v-menu left bottom offset-y class="d-print-none">
+      <v-menu left bottom offset-y close-on-content-click class="d-print-none">
         <template v-slot:activator="{ on, attrs }">
           <v-btn icon v-on="on" v-bind="attrs">
             <v-icon>mdi-dots-vertical</v-icon>
           </v-btn>
         </template>
         <v-list class="py-0" dense>
-          <v-list-item @click="changeDarkMode">
+          <v-list-item to="/perfil">
+            <v-list-item-icon>
+              <v-icon>mdi-account</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>Seu perfil</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+          <v-list-item @click="$vuetify.theme.dark = !$vuetify.theme.dark">
             <v-list-item-icon>
               <v-icon v-if="$vuetify.theme.dark">mdi-white-balance-sunny</v-icon>
               <v-icon v-else>mdi-weather-night</v-icon>
             </v-list-item-icon>
             <v-list-item-content>
-              <v-list-item-title>Modo escuro</v-list-item-title>
+              <v-list-item-title>Modo {{ $vuetify.theme.dark ? 'claro' : 'escuro' }}</v-list-item-title>
             </v-list-item-content>
           </v-list-item>
-          <v-list-item to="/suporte">
+          <v-list-item to="/creditos">
             <v-list-item-icon>
-              <v-icon>mdi-face-agent</v-icon>
+              <v-icon>mdi-trophy-award</v-icon>
             </v-list-item-icon>
             <v-list-item-content>
-              <v-list-item-title>Suporte</v-list-item-title>
+              <v-list-item-title>Créditos</v-list-item-title>
             </v-list-item-content>
           </v-list-item>
           <v-divider></v-divider>
@@ -175,9 +183,19 @@ export default {
     config,
     mostrarMenu: null,
   }),
+  computed: {
+    darkMode() {
+      return this.$vuetify.theme.dark;
+    }
+  },
+  watch: {
+    darkMode() {
+      this.refreshTheme();
+    }
+  },
   methods: {
-    changeDarkMode() {
-      this.$vuetify.theme.dark = !this.$vuetify.theme.dark;
+    refreshTheme() {
+      document.querySelector('meta[name="theme-color"]').setAttribute('content',  this.$vuetify.theme.dark ? '#272727' : '#1976D2');
       localStorage.setItem('darkmode', this.$vuetify.theme.dark ? '1' : '0');
     },
   },

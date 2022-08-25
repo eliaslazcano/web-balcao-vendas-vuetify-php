@@ -68,9 +68,9 @@ const routes = [
     component: () => import('../views/relatorios/FluxoCaixa.vue')
   },
   {
-    path: '/suporte',
-    name: 'suporte',
-    component: () => import('../views/SuporteContato.vue')
+    path: '/creditos',
+    name: 'creditos',
+    component: () => import('../views/CreditosContato.vue')
   }
 ];
 
