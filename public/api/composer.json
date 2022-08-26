@@ -19,7 +19,8 @@
     "ext-mbstring": "*",
     "ext-pdo": "*",
     "ext-gd": "*",
-    "stil/gd-text": "^1.1"
+    "stil/gd-text": "^1.1",
+    "phpmailer/phpmailer": "^6.6"
   },
   "scripts": {
     "serve": "php -S localhost:3000"
