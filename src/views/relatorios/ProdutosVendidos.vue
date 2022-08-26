@@ -54,6 +54,21 @@
         <template v-slot:[`item.valor`]="{item}">
           <span style="white-space: nowrap">R$ {{ item.valor ? formatoMonetario(item.valor) : '0,00' }}</span>
         </template>
+        <template v-slot:foot>
+          <tfoot>
+          <tr>
+            <td colspan="2">
+              <div class="subtitle-2 primary--text d-flex justify-space-between">
+                <span>TOTAL</span>
+                <span v-if="$vuetify.breakpoint.xsOnly">R$ {{ formatoMonetario(valorTotal) }}</span>
+              </div>
+            </td>
+            <td v-if="!$vuetify.breakpoint.xsOnly">
+              <p class="subtitle-2 primary--text mb-0">R$ {{ formatoMonetario(valorTotal) }}</p>
+            </td>
+          </tr>
+          </tfoot>
+        </template>
       </v-data-table>
     </v-card>
   </async-container>
@@ -82,6 +97,11 @@ export default {
     tableSearch: '',
     tableDense: false,
   }),
+  computed: {
+    valorTotal() {
+      return this.tableItems.reduce((previousValue, currentValue) => previousValue + parseFloat(currentValue.valor), 0);
+    },
+  },
   methods: {
     imprimir() {
       setTimeout(() => window.print(), 500);

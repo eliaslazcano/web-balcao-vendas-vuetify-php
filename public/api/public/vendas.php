@@ -3,12 +3,13 @@
  * GET: lista as vendas cadastradas, ou apenas a venda do ID informado.
  * POST: cria ou atualiza a venda do ID informado.
  * PUT: encerra/trava a venda informada, tornando ela somente-leitura.
+ * DELETE: destrava a venda informada, tornando ela editavel.
  */
 
 use App\Helper\HttpHelper;
 use App\Database\DbApp;
 
-HttpHelper::validarMetodos(['GET','POST','PUT']);
+HttpHelper::validarMetodos(['GET','POST','PUT','DELETE']);
 $db = new DbApp();
 
 if (HttpHelper::isGet()) {
@@ -68,7 +69,10 @@ elseif (HttpHelper::isPost()) {
   HttpHelper::emitirJson(['id' => intval($id), 'itens' => $itens, 'remover' => $remover]);
 }
 elseif (HttpHelper::isPut()) {
-  sleep(3);
   $id = HttpHelper::validarParametro('id');
   $db->update('UPDATE vendas SET encerrado_em = CURRENT_TIMESTAMP WHERE id = :id', [':id' => $id]);
+}
+elseif (HttpHelper::isDelete()) {
+  $id = HttpHelper::validarParametro('id');
+  $db->update('UPDATE vendas SET encerrado_em = NULL WHERE id = :id', [':id' => $id]);
 }

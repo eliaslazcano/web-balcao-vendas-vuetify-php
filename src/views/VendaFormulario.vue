@@ -9,7 +9,17 @@
               <v-icon>mdi-dots-vertical</v-icon>
             </v-btn>
           </template>
-          <v-list class="py-0" dense>
+          <v-list v-if="encerrado_em !== null" class="py-0" dense>
+            <v-list-item @click="desbloquearVenda">
+              <v-list-item-icon>
+                <v-icon>mdi-lock-open</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>Desbloquear a venda</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+          <v-list v-else class="py-0" dense>
             <v-list-item @click="dialogRfid = true">
               <v-list-item-icon>
                 <v-icon>mdi-contactless-payment-circle</v-icon>
@@ -18,8 +28,6 @@
                 <v-list-item-title>Vincular RFID</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
-          </v-list>
-          <v-list class="py-0" dense>
             <v-list-item @click="dialogRfidLista = true">
               <v-list-item-icon>
                 <v-icon>mdi-credit-card-wireless-outline</v-icon>
@@ -432,7 +440,7 @@ export default {
     tableCadastrosHeaders: [
       {value: 'id', text: 'COD.', width: '6rem', cellClass: 'cursor-pointer'},
       {value: 'nome', text: 'NOME', cellClass: 'cursor-pointer text-no-wrap'},
-      {value: 'vendas', text: 'VENDAS', cellClass: 'cursor-pointer'},
+      {value: 'vendas', text: 'VENDAS', cellClass: 'cursor-pointer', filterable: false},
     ],
     tableCadastrosItems: [],
     tableCadastrosSearch: '',
@@ -547,8 +555,22 @@ export default {
         this.encerrandoVenda = false;
       }
     },
+    async desbloquearVenda() {
+      if (!this.id) return;
+      if (!confirm('A venda já estava encerrada para não ser modificada, tem certeza que é para desbloquear?')) return;
+      this.encerrandoVenda = true;
+      try {
+        const webclient = http();
+        await webclient.delete('vendas', {params: {'id': this.id}});
+        this.encerrado_em = null;
+        this.$store.commit('showSnackbar', {color: 'primary', text: 'Você desbloqueou a venda'});
+      } finally {
+        this.encerrandoVenda = false;
+      }
+    },
     iptProdutoFiltro(item, queryText, itemText) {
-      if (item.codigo && item.codigo === queryText) return true;
+      if (item.codigo && (item.codigo === queryText)) return true;
+      if (item.codigo && item.codigo.replace(/\D/g,'').length > 0 && parseInt(item.codigo) === parseInt(queryText)) return true;
       return itemText.toLocaleLowerCase().indexOf(queryText.toLocaleLowerCase()) > -1
     },
     selecionarCadastro(item) {
