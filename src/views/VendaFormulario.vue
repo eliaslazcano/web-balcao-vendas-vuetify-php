@@ -454,7 +454,7 @@ export default {
     dialogRfidLista: false,
     tableRfidHeaders: [
       {value: 'criado_em', text: 'DATA'},
-      {value: 'rfid', text: 'CÓDIGO'},
+      {value: 'rfid', text: 'DISPOSITIVO'},
       {value: 'acoes', text: 'DESVINCULAR', align: 'center', sortable: false, filterable: false},
     ],
     tableRfiditems: [],

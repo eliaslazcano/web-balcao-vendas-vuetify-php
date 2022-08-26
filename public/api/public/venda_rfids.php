@@ -4,12 +4,13 @@
  * POST: vincula o RFID informado a uma venda informada.
  * DELETE: desvincula o RFID informado do seu vinculo atual.
  * POST: lista os RFIDs vinculados a venda informada.
+ * PATH: lista todos os RFIDs ativos no sistema.
  */
 
 use App\Helper\HttpHelper;
 use App\Database\DbApp;
 
-HttpHelper::validarMetodos(['GET','POST','DELETE','PUT']);
+HttpHelper::validarMetodos(['GET','POST','DELETE','PUT','PATCH']);
 $db = new DbApp();
 
 if (HttpHelper::isGet()) {
@@ -47,5 +48,9 @@ elseif (HttpHelper::isDelete()) {
 elseif (HttpHelper::isPut()) {
   $venda = HttpHelper::validarParametro('venda');
   $x = $db->query('SELECT id, rfid, criado_em FROM venda_rfids WHERE venda = :venda AND desvinculado_em IS NULL', [':venda' => $venda], ['id']);
+  HttpHelper::emitirJson($x);
+}
+elseif (HttpHelper::isPatch()) {
+  $x = $db->query('SELECT r.id, r.venda, r.rfid, r.criado_em, v.cliente FROM venda_rfids r LEFT JOIN vendas v ON r.venda = v.id WHERE desvinculado_em IS NULL', [], ['id','venda']);
   HttpHelper::emitirJson($x);
 }

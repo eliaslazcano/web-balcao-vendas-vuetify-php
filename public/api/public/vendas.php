@@ -71,6 +71,7 @@ elseif (HttpHelper::isPost()) {
 elseif (HttpHelper::isPut()) {
   $id = HttpHelper::validarParametro('id');
   $db->update('UPDATE vendas SET encerrado_em = CURRENT_TIMESTAMP WHERE id = :id', [':id' => $id]);
+  $db->update('UPDATE venda_rfids SET desvinculado_em = CURRENT_TIMESTAMP WHERE venda = :id', [':id' => $id]);
 }
 elseif (HttpHelper::isDelete()) {
   $id = HttpHelper::validarParametro('id');
