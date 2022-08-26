@@ -108,7 +108,7 @@ create table usuarios
 	nome varchar(192) null,
 	email varchar(100) null,
 	criado_em datetime default current_timestamp() not null,
-	inativado_em datetime default null,
+	inativado_em datetime null,
 	constraint login
 		unique (login)
 );
@@ -126,6 +126,22 @@ create table sessoes
 		foreign key (usuario) references usuarios (id)
 			on update cascade on delete cascade
 );
+
+create table usuario_recoveries
+(
+	id int unsigned auto_increment
+		primary key,
+	usuario int unsigned not null,
+	email varchar(128) null,
+	codigo varchar(6) not null,
+	ip varchar(50) null,
+	criado_em datetime default current_timestamp() not null,
+	utilizado_em datetime null comment 'null = nao utilizado',
+	constraint usuario_resets_usuario_id_fk
+		foreign key (usuario) references usuarios (id)
+			on update cascade on delete cascade
+)
+comment 'solicitacoes de recuperacao de senha';
 
 create table vendas
 (
