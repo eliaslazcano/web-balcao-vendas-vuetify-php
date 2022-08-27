@@ -88,6 +88,18 @@ create table despesas
 	deletado_em datetime null
 );
 
+create table dispositivos_rfid
+(
+	id int unsigned auto_increment
+		primary key,
+	rfid varchar(32) null,
+	descricao varchar(64) null,
+	criado_em datetime default current_timestamp() null,
+	deletado_em datetime null,
+	constraint rfid
+		unique (rfid)
+);
+
 create table produtos
 (
 	id int unsigned auto_increment
@@ -181,7 +193,7 @@ create table venda_rfids
 (
 	id int unsigned auto_increment
 		primary key,
-	rfid varchar(32) null,
+	rfid varchar(32) null comment 'codigo do RFID',
 	venda int unsigned not null,
 	criado_em datetime default current_timestamp() null,
 	desvinculado_em datetime null,
