@@ -117,6 +117,14 @@
               <v-list-item-title>Despesas</v-list-item-title>
             </v-list-item-content>
           </v-list-item>
+          <v-list-item to="/rfid" v-if="config.rfid">
+            <v-list-item-icon>
+              <v-icon>mdi-contactless-payment-circle</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>Dispositivos RFID</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
           <v-list-group>
             <template v-slot:activator>
               <v-list-item-icon>

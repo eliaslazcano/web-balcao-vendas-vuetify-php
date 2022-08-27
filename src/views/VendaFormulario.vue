@@ -3,7 +3,7 @@
     <v-card width="64rem" class="mx-auto mb-4">
       <v-card-title class="justify-space-between">
         {{ id ? 'Venda Nº' + id : 'Registrar Venda' }}
-        <v-menu left bottom offset-y class="d-print-none" v-if="rfidDisponivel">
+        <v-menu left bottom offset-y class="d-print-none" v-if="encerrado_em !== null || rfidDisponivel">
           <template v-slot:activator="{ on, attrs }">
             <v-btn icon v-bind="attrs" v-on="on">
               <v-icon>mdi-dots-vertical</v-icon>
@@ -19,21 +19,21 @@
               </v-list-item-content>
             </v-list-item>
           </v-list>
-          <v-list v-else class="py-0" dense>
+          <v-list v-if="rfidDisponivel && !encerrado_em" class="py-0" dense>
             <v-list-item @click="dialogRfid = true">
               <v-list-item-icon>
-                <v-icon>mdi-contactless-payment-circle</v-icon>
+                <v-icon>mdi-access-point-plus</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title>Vincular RFID</v-list-item-title>
+                <v-list-item-title>Vincular dispositivo de aproximação</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item @click="dialogRfidLista = true">
               <v-list-item-icon>
-                <v-icon>mdi-credit-card-wireless-outline</v-icon>
+                <v-icon>mdi-contactless-payment-circle</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title>RFIDs vinculados</v-list-item-title>
+                <v-list-item-title>Dispositivos de vinculados</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list>
@@ -344,10 +344,9 @@
         </v-form>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="dialogRfidLista" width="32rem" :persistent="vinculandoRfid">
+    <v-dialog v-model="dialogRfidLista" width="40rem" :persistent="vinculandoRfid">
       <v-card>
-        <v-card-title>RFIs vinculados</v-card-title>
-        <v-card-subtitle>Dispositivos de aproximação</v-card-subtitle>
+        <v-card-title style="font-size: 1rem">Dispositivos de aproximação vinculados</v-card-title>
         <v-divider></v-divider>
         <v-data-table
           :headers="tableRfidHeaders"
@@ -378,11 +377,11 @@
         </v-toolbar>
         <v-card-text class="pb-0">
           <div class="text-center my-4">
-            <v-icon size="64" color="error">mdi-lock-alert</v-icon>
+            <v-icon size="64" color="error">mdi-shield-lock</v-icon>
           </div>
-          <p class="body-1 text-justify">Ao encerrar uma venda ela fica <strong class="primary--text">protegida</strong>
+          <p class="body-1 text-justify">Isso torna a venda <strong class="primary--text">protegida</strong>
             para não sofrer mais nenhuma <strong class="primary--text">alteração</strong>. Mas ela vai permanecer
-            disponível para consulta.</p>
+            <span class="green--text">disponível para consulta</span>.</p>
           <p class="body-1 red--text text-center">Tem certeza que deseja prosseguir?</p>
         </v-card-text>
         <v-card-actions class="justify-center">
@@ -453,8 +452,9 @@ export default {
     vinculandoRfid: false,
     dialogRfidLista: false,
     tableRfidHeaders: [
-      {value: 'criado_em', text: 'DATA'},
+      {value: 'criado_em', text: 'VINCULADO EM', cellClass: 'text-no-wrap'},
       {value: 'rfid', text: 'DISPOSITIVO'},
+      {value: 'descricao', text: 'DESCRIÇÃO'},
       {value: 'acoes', text: 'DESVINCULAR', align: 'center', sortable: false, filterable: false},
     ],
     tableRfiditems: [],
@@ -523,12 +523,13 @@ export default {
           itens: this.tableItems,
           remover: this.itemsRemover
         };
-        await webclient.post('vendas', payload);
+        const {data} = await webclient.post('vendas', payload);
 
-        if (this.id) this.$store.commit('showSnackbar', {color: 'success', text: 'Venda atualizada!'});
+        if (this.id) this.$store.commit('showSnackbar', {color: 'success', text: 'Alterações salvas!'});
         else this.$store.commit('showSnackbar', {color: 'success', text: 'Venda registrada!'});
 
-        await this.$router.push('/vendas');
+        if (!this.id && data.id) await this.$router.push('/venda/' + data.id);
+        else await this.$router.push('/vendas');
       } finally {
         this.enviandoVenda = false;
       }

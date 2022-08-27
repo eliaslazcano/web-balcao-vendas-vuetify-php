@@ -58,6 +58,11 @@ const routes = [
     component: () => import('../views/DespesasLista.vue')
   },
   {
+    path: '/rfid',
+    name: 'rfid',
+    component: () => import('../views/RfidsLista.vue')
+  },
+  {
     path: '/relatorio/produtos_vendidos',
     name: 'relatorio-produtos',
     component: () => import('../views/relatorios/ProdutosVendidos.vue')

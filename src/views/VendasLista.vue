@@ -10,6 +10,14 @@
             </v-btn>
           </template>
           <v-list class="py-0" dense>
+            <v-list-item @click="tableDense = !tableDense">
+              <v-list-item-icon>
+                <v-icon>{{ tableDense ? 'mdi-arrow-expand-vertical' : 'mdi-arrow-collapse-vertical' }}</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>{{ tableDense ? 'Visualização expandida' : 'Visualização compacta' }}</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
             <v-list-item @click="ocultarEncerradas = !ocultarEncerradas">
               <v-list-item-icon>
                 <v-icon>{{ ocultarEncerradas ? 'mdi-lock-open-check' : 'mdi-lock-minus' }}</v-icon>
@@ -26,20 +34,12 @@
                 <v-list-item-title>{{ iptFiltrarData ? 'Não filtrar a data' : 'Filtrar a data' }}</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
-            <v-list-item @click="tableDense = !tableDense">
-              <v-list-item-icon>
-                <v-icon>{{ tableDense ? 'mdi-arrow-expand-vertical' : 'mdi-arrow-collapse-vertical' }}</v-icon>
-              </v-list-item-icon>
-              <v-list-item-content>
-                <v-list-item-title>{{ tableDense ? 'Visualização expandida' : 'Visualização compacta' }}</v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
             <v-list-item v-if="rfid_disponivel" @click="dialogRfidLista = true">
               <v-list-item-icon>
                 <v-icon>mdi-contactless-payment-circle</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title>Dispositivos de aproximação</v-list-item-title>
+                <v-list-item-title>Dispositivos de aproximação em uso</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item @click="imprimir">
@@ -152,7 +152,7 @@
         </v-form>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="dialogRfidLista" width="48rem">
+    <v-dialog v-model="dialogRfidLista" width="56rem">
       <v-card>
         <v-card-title style="font-size: 1rem">Dispositivos de aproximação em uso</v-card-title>
         <v-divider></v-divider>
@@ -161,7 +161,12 @@
           :items="dialogRfidListaItems"
           :loading="dialogRfidListaLoading"
           no-data-text="Não há dispositivos vinculados a nenhuma venda"
+          sort-by="criado_em"
+          sort-desc
         >
+          <template v-slot:[`item.venda`]="{item}">
+            <router-link :to="'/venda/' + item.venda">{{ item.venda }}</router-link>
+          </template>
           <template v-slot:[`item.criado_em`]="{item}">{{ moment(item.criado_em).format('DD/MM/YYYY HH:mm') }}</template>
           <template v-slot:[`item.acoes`]="{item}">
             <v-icon color="red" @click="desvincularRfid(item.rfid)" :disabled="dialogRfidListaLoading">mdi-delete-circle</v-icon>
@@ -212,6 +217,7 @@ export default {
       {value: 'venda', text: 'VENDA Nº'},
       {value: 'cliente', text: 'CLIENTE'},
       {value: 'rfid', text: 'DISPOSITIVO'},
+      {value: 'descricao', text: 'DESCRIÇÃO'},
       {value: 'criado_em', text: 'VINCULADO EM', cellClass: 'text-no-wrap'},
       {value: 'acoes', text: 'DESVINCULAR', sortable: false, align: 'center'},
     ],
