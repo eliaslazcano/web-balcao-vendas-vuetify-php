@@ -146,7 +146,7 @@
         <v-form ref="form-cadastro" @submit.prevent="salvarCadastro" :disabled="tableLoading">
           <v-card-title class="justify-space-between">
             <span>{{ iptId ? 'Editar' : 'Criar' }} cadastro</span>
-            <v-tooltip bottom>
+            <v-tooltip bottom v-if="!!iptId">
               <template v-slot:activator="{ on, attrs }">
                 <v-btn icon color="primary" v-bind="attrs" v-on="on" :to="'/cliente/' + iptId">
                   <v-icon>mdi-open-in-new</v-icon>
