@@ -3,6 +3,7 @@ create table cliente_categorias
 	id int unsigned auto_increment
 		primary key,
 	nome varchar(100) null,
+	criado_em datetime default current_timestamp() null,
 	deletado_em datetime null
 );
 
@@ -26,6 +27,7 @@ create table cliente_emails
 		primary key,
 	cliente int unsigned not null,
 	email varchar(100) null,
+	autorizado tinyint(1) default 0 not null comment 'cliente autorizou receber mensagens do estabelecimento',
 	criado_em datetime default current_timestamp() null,
 	deletado_em datetime null,
 	constraint cliente_emails_clientes_id_fk
