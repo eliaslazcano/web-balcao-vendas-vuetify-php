@@ -1,6 +1,6 @@
 <template>
   <async-container :loading="loading">
-    <v-card width="64rem" class="mx-auto mb-12">
+    <v-card width="72rem" class="mx-auto mb-12">
       <v-card-title class="justify-space-between">
         Vendas
         <v-menu left bottom offset-y class="d-print-none">
@@ -18,6 +18,22 @@
                 <v-list-item-title>{{ tableDense ? 'Visualização expandida' : 'Visualização compacta' }}</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
+            <v-list-item @click="ocultarEncerradas = !ocultarEncerradas">
+              <v-list-item-icon>
+                <v-icon>{{ ocultarEncerradas ? 'mdi-lock-open-check' : 'mdi-lock-minus' }}</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>{{ ocultarEncerradas ? 'Mostrar vendas encerradas' : 'Ocultar vendas encerradas' }}</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="mostrarTotal = !mostrarTotal">
+              <v-list-item-icon>
+                <v-icon>{{ mostrarTotal ? 'mdi-currency-usd-off' : 'mdi-currency-usd' }}</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>{{ mostrarTotal ? 'Ocultar total' : 'Mostrar total' }}</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
             <v-list-item @click="iptFiltrarData = !iptFiltrarData">
               <v-list-item-icon>
                 <v-icon>{{ iptFiltrarData ? 'mdi-calendar-remove' : 'mdi-calendar-check' }}</v-icon>
@@ -26,12 +42,12 @@
                 <v-list-item-title>{{ iptFiltrarData ? 'Não filtrar a data' : 'Filtrar a data' }}</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
-            <v-list-item @click="ocultarEncerradas = !ocultarEncerradas">
+            <v-list-item v-if="rfid_disponivel" @click="dialogRfidLista = true">
               <v-list-item-icon>
-                <v-icon>{{ ocultarEncerradas ? 'mdi-lock-open-check' : 'mdi-lock-minus' }}</v-icon>
+                <v-icon>mdi-contactless-payment-circle</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title>{{ ocultarEncerradas ? 'Mostrar vendas encerradas' : 'Ocultar vendas encerradas' }}</v-list-item-title>
+                <v-list-item-title>Dispositivos de aproximação em uso</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item @click="imprimir">
@@ -103,11 +119,17 @@
           </v-btn>
         </template>
         <template v-slot:foot>
-          <tfoot>
+          <tfoot v-if="mostrarTotal">
           <tr>
             <th colspan="5" class="text-center">
-              <span class="success--text">Arrecadado R$ {{formatoMonetario(totalArrecadado)}}</span> /
-              <span class="error--text">Pendente R$ {{formatoMonetario(totalPendente)}}</span>
+              <div class="d-flex align-center justify-center">
+                <span class="success--text">Arrecadado R$ {{formatoMonetario(totalArrecadado)}}</span>
+                <span class="mx-2">/</span>
+                <span class="error--text">Pendente R$ {{formatoMonetario(totalPendente)}}</span>
+                <v-btn icon x-small color="primary" @click="mostrarTotal = false" class="ml-2">
+                  <v-icon>mdi-eye-off</v-icon>
+                </v-btn>
+              </div>
             </th>
           </tr>
           </tfoot>
@@ -144,6 +166,31 @@
         </v-form>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="dialogRfidLista" width="56rem">
+      <v-card>
+        <v-card-title style="font-size: 1rem">Dispositivos de aproximação em uso</v-card-title>
+        <v-divider></v-divider>
+        <v-data-table
+          :headers="dialogRfidListaHeaders"
+          :items="dialogRfidListaItems"
+          :loading="dialogRfidListaLoading"
+          no-data-text="Não há dispositivos vinculados a nenhuma venda"
+          sort-by="criado_em"
+          sort-desc
+        >
+          <template v-slot:[`item.venda`]="{item}">
+            <router-link :to="'/venda/' + item.venda">{{ item.venda }}</router-link>
+          </template>
+          <template v-slot:[`item.criado_em`]="{item}">{{ moment(item.criado_em).format('DD/MM/YYYY HH:mm') }}</template>
+          <template v-slot:[`item.acoes`]="{item}">
+            <v-icon color="red" @click="desvincularRfid(item.rfid)" :disabled="dialogRfidListaLoading">mdi-delete-circle</v-icon>
+          </template>
+        </v-data-table>
+        <v-card-actions class="justify-center">
+          <v-btn color="primary" outlined small @click="dialogRfidLista = false">Fechar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </async-container>
 </template>
 
@@ -162,11 +209,11 @@ export default {
     loading: true,
     tableLoading: true,
     tableHeaders: [
-      {value: 'id', text: 'Nº', width: '6rem'},
+      {value: 'id', text: 'VENDA Nº'},
       {value: 'criado_em', text: 'DATA', width: '11rem', filterable: false},
       {value: 'cliente', text: 'CLIENTE'},
       {value: 'debito', text: 'VALOR', cellClass: 'text-no-wrap', filterable: false},
-      {value: 'acoes', text: 'ABRIR', align: 'center', cellClass: 'text-no-wrap', sortable: false, filterable: false},
+      {value: 'acoes', text: 'ABRIR', align: 'center', sortable: false, filterable: false},
     ],
     tableItems: [],
     tableSearch: '',
@@ -174,11 +221,23 @@ export default {
     iptDataInicial: moment().format('YYYY-01-01'),
     iptDataFinal: moment().format('YYYY-MM-DD'),
     iptFiltrarData: true,
-    ocultarEncerradas: false,
+    ocultarEncerradas: localStorage.getItem('VendasLista_ocultarEncerradas') === '1',
     rfid_disponivel: config.rfid,
     dialogRfid: false,
     buscandoRfid: false,
     iptRfid: '',
+    dialogRfidLista: false,
+    dialogRfidListaHeaders: [
+      {value: 'venda', text: 'VENDA Nº'},
+      {value: 'cliente', text: 'CLIENTE'},
+      {value: 'rfid', text: 'DISPOSITIVO'},
+      {value: 'descricao', text: 'DESCRIÇÃO'},
+      {value: 'criado_em', text: 'VINCULADO EM', cellClass: 'text-no-wrap'},
+      {value: 'acoes', text: 'DESVINCULAR', sortable: false, align: 'center'},
+    ],
+    dialogRfidListaItems: [],
+    dialogRfidListaLoading: false,
+    mostrarTotal: localStorage.getItem('VendasLista_mostrarTotal') === '1',
   }),
   computed: {
     tableItemsFiltered() {
@@ -228,6 +287,28 @@ export default {
         this.buscandoRfid = false;
       }
     },
+    async buscarTodosRfids() {
+      if (!this.rfid_disponivel) return;
+      this.dialogRfidListaLoading = true;
+      try {
+        const webclient = http();
+        const {data} = await webclient.patch('venda_rfids');
+        this.dialogRfidListaItems = data;
+      } finally {
+        this.dialogRfidListaLoading = false;
+      }
+    },
+    async desvincularRfid(rfid) {
+      if (!confirm('Deseja desvincular esse dispositivo?')) return;
+      this.dialogRfidListaLoading = true;
+      try {
+        const webclient = http();
+        await webclient.delete(`venda_rfids?rfid=${rfid}`);
+        await this.buscarTodosRfids();
+      } finally {
+        this.dialogRfidListaLoading = false;
+      }
+    },
   },
   async created() {
     try {
@@ -248,6 +329,15 @@ export default {
     },
     dialogRfid(v) {
       if (!v) this.iptRfid = '';
+    },
+    dialogRfidLista(v) {
+      if (v) this.buscarTodosRfids();
+    },
+    mostrarTotal(v) {
+      localStorage.setItem('VendasLista_mostrarTotal', (v ? '1' : '0'));
+    },
+    ocultarEncerradas(v) {
+      localStorage.setItem('VendasLista_ocultarEncerradas', (v ? '1' : '0'));
     },
   },
 }

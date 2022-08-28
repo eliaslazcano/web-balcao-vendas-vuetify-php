@@ -123,7 +123,6 @@ export default {
         this.debito = data.debito;
         this.vendas = data.vendas;
         this.despesas = data.despesas;
-        console.log(data);
       } catch (e) {
         return false;
       } finally {

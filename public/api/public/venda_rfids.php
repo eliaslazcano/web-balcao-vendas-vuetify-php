@@ -3,13 +3,14 @@
  * GET: obtem os dados do vinculo atual do RFID informado. (venda, data, cliente).
  * POST: vincula o RFID informado a uma venda informada.
  * DELETE: desvincula o RFID informado do seu vinculo atual.
- * POST: lista os RFIDs vinculados a venda informada.
+ * PUT: lista os RFIDs vinculados a venda informada.
+ * PATH: lista todos os RFIDs ativos no sistema.
  */
 
 use App\Helper\HttpHelper;
 use App\Database\DbApp;
 
-HttpHelper::validarMetodos(['GET','POST','DELETE','PUT']);
+HttpHelper::validarMetodos(['GET','POST','DELETE','PUT','PATCH']);
 $db = new DbApp();
 
 if (HttpHelper::isGet()) {
@@ -46,6 +47,11 @@ elseif (HttpHelper::isDelete()) {
 }
 elseif (HttpHelper::isPut()) {
   $venda = HttpHelper::validarParametro('venda');
-  $x = $db->query('SELECT id, rfid, criado_em FROM venda_rfids WHERE venda = :venda AND desvinculado_em IS NULL', [':venda' => $venda], ['id']);
+  $sql = 'SELECT vr.id, vr.rfid, vr.criado_em, dr.id AS id_dispositivo, dr.descricao FROM venda_rfids vr LEFT JOIN dispositivos_rfid dr ON vr.rfid = dr.rfid WHERE vr.venda = :venda AND vr.desvinculado_em IS NULL GROUP BY vr.id';
+  $x = $db->query($sql, [':venda' => $venda], ['id']);
+  HttpHelper::emitirJson($x);
+}
+elseif (HttpHelper::isPatch()) {
+  $x = $db->query('SELECT vr.id, vr.venda, vr.rfid, vr.criado_em, v.cliente, dr.id AS id_dispositivo, dr.descricao FROM venda_rfids vr LEFT JOIN vendas v ON vr.venda = v.id LEFT JOIN dispositivos_rfid dr ON vr.rfid = dr.rfid WHERE vr.desvinculado_em IS NULL GROUP BY vr.id', [], ['id','venda']);
   HttpHelper::emitirJson($x);
 }
