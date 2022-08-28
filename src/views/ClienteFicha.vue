@@ -84,7 +84,7 @@
         >
           <template v-slot:[`item.criado_em`]="{item}">
             <span v-if="item.criado_em">{{ moment(item.criado_em).format('DD/MM/YYYY HH:mm') }}</span>
-            <span v-else class="grey--text">NÃO POSSUI</span>
+            <small v-else class="grey--text">NÃO POSSUI</small>
           </template>
           <template v-slot:[`item.tipo`]="{item}">
             <v-icon v-if="item.tipo === 1">mdi-phone</v-icon>
@@ -113,7 +113,7 @@
         >
           <template v-slot:[`item.criado_em`]="{item}">
             <span v-if="item.criado_em">{{ moment(item.criado_em).format('DD/MM/YYYY HH:mm') }}</span>
-            <span v-else class="grey--text">NÃO POSSUI</span>
+            <small v-else class="grey--text">NÃO POSSUI</small>
           </template>
           <template v-slot:[`item.autorizado`]="{item}">
             <div class="d-flex justify-center">
@@ -150,7 +150,7 @@
         >
           <template v-slot:[`item.criado_em`]="{item}">
             <span v-if="item.criado_em">{{ moment(item.criado_em).format('DD/MM/YYYY HH:mm') }}</span>
-            <span v-else class="grey--text">NÃO POSSUI</span>
+            <small v-else class="grey--text">NÃO POSSUI</small>
           </template>
           <template v-slot:[`item.acoes`]="{item}">
             <v-btn icon small color="red" @click="excluirEndereco(item.id)">
@@ -175,7 +175,7 @@
         >
           <template v-slot:[`item.criado_em`]="{item}">
             <span v-if="item.criado_em">{{ moment(item.criado_em).format('DD/MM/YYYY HH:mm') }}</span>
-            <span v-else class="grey--text">NÃO POSSUI</span>
+            <small v-else class="grey--text">NÃO POSSUI</small>
           </template>
           <template v-slot:[`item.acoes`]="{item}">
             <v-btn icon small color="red" @click="excluirObservacao(item.id)">
@@ -197,7 +197,7 @@
         >
           <template v-slot:[`item.criado_em`]="{item}">
             <span v-if="item.criado_em">{{ moment(item.criado_em).format('DD/MM/YYYY HH:mm') }}</span>
-            <span v-else class="grey--text">NÃO POSSUI</span>
+            <small v-else class="grey--text">NÃO POSSUI</small>
           </template>
           <template v-slot:[`item.id`]="{item}">
             {{item.id}}

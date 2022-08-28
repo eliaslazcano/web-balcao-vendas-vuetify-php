@@ -475,7 +475,7 @@ export default {
         if (spinner) this.loading = true;
         const webclient = http();
         const {data} = await webclient.get('produtos');
-        this.iptProdutoItems = data;
+        this.iptProdutoItems = data.produtos;
         if (this.id) {
           const {data} = await webclient.get(`vendas?id=${this.id}`);
           this.cadastro = data.cadastro;
