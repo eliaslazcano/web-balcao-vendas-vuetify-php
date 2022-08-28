@@ -26,6 +26,14 @@
                 <v-list-item-title>{{ ocultarEncerradas ? 'Mostrar vendas encerradas' : 'Ocultar vendas encerradas' }}</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
+            <v-list-item @click="mostrarTotal = !mostrarTotal">
+              <v-list-item-icon>
+                <v-icon>{{ mostrarTotal ? 'mdi-currency-usd-off' : 'mdi-currency-usd' }}</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>{{ mostrarTotal ? 'Ocultar total' : 'Mostrar total' }}</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
             <v-list-item @click="iptFiltrarData = !iptFiltrarData">
               <v-list-item-icon>
                 <v-icon>{{ iptFiltrarData ? 'mdi-calendar-remove' : 'mdi-calendar-check' }}</v-icon>
@@ -111,11 +119,17 @@
           </v-btn>
         </template>
         <template v-slot:foot>
-          <tfoot>
+          <tfoot v-if="mostrarTotal">
           <tr>
             <th colspan="5" class="text-center">
-              <span class="success--text">Arrecadado R$ {{formatoMonetario(totalArrecadado)}}</span> /
-              <span class="error--text">Pendente R$ {{formatoMonetario(totalPendente)}}</span>
+              <div class="d-flex align-center justify-center">
+                <span class="success--text">Arrecadado R$ {{formatoMonetario(totalArrecadado)}}</span>
+                <span class="mx-2">/</span>
+                <span class="error--text">Pendente R$ {{formatoMonetario(totalPendente)}}</span>
+                <v-btn icon x-small color="primary" @click="mostrarTotal = false" class="ml-2">
+                  <v-icon>mdi-eye-off</v-icon>
+                </v-btn>
+              </div>
             </th>
           </tr>
           </tfoot>
@@ -207,7 +221,7 @@ export default {
     iptDataInicial: moment().format('YYYY-01-01'),
     iptDataFinal: moment().format('YYYY-MM-DD'),
     iptFiltrarData: true,
-    ocultarEncerradas: false,
+    ocultarEncerradas: localStorage.getItem('VendasLista_ocultarEncerradas') === '1',
     rfid_disponivel: config.rfid,
     dialogRfid: false,
     buscandoRfid: false,
@@ -223,6 +237,7 @@ export default {
     ],
     dialogRfidListaItems: [],
     dialogRfidListaLoading: false,
+    mostrarTotal: localStorage.getItem('VendasLista_mostrarTotal') === '1',
   }),
   computed: {
     tableItemsFiltered() {
@@ -317,7 +332,13 @@ export default {
     },
     dialogRfidLista(v) {
       if (v) this.buscarTodosRfids();
-    }
+    },
+    mostrarTotal(v) {
+      localStorage.setItem('VendasLista_mostrarTotal', (v ? '1' : '0'));
+    },
+    ocultarEncerradas(v) {
+      localStorage.setItem('VendasLista_ocultarEncerradas', (v ? '1' : '0'));
+    },
   },
 }
 </script>

@@ -30,7 +30,11 @@ class HttpHelper
    */
   public static function erroJson($codigoHttp = 400, $mensagem = '', $erroId = 1, $dadosExtras = '')
   {
-    if (self::ALLOW_ORIGIN) header("Access-Control-Allow-Origin: " . self::ALLOW_ORIGIN, true);
+    header("Access-Control-Allow-Methods: {$_SERVER['REQUEST_METHOD']}", true);
+    if (self::ALLOW_HEADERS) header('Access-Control-Allow-Headers: ' . self::ALLOW_HEADERS, true);
+    if (self::ALLOW_ORIGIN) header('Access-Control-Allow-Origin: ' . self::ALLOW_ORIGIN, true);
+    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') die();
+
     if (self::ALLOW_CREDENTIALS) header('Access-Control-Allow-Credentials: true');
     if (function_exists('http_response_code')) http_response_code($codigoHttp);
     else header("HTTP/1.1 $codigoHttp", true, $codigoHttp);

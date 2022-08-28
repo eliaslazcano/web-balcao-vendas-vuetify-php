@@ -1,6 +1,6 @@
 <template>
   <async-container :loading="loading">
-    <v-card width="64rem" class="mx-auto mb-12">
+    <v-card class="mx-auto mb-12">
       <v-card-title class="justify-space-between">
         Clientes
         <v-menu left bottom offset-y class="d-print-none">
@@ -18,6 +18,14 @@
                 <v-list-item-title>{{ tableDense ? 'Visualização expandida' : 'Visualização compacta' }}</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
+            <v-list-item @click="visualizarCategorias">
+              <v-list-item-icon>
+                <v-icon>mdi-folder-account</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>Gerenciar categorias</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
             <v-list-item @click="imprimir">
               <v-list-item-icon>
                 <v-icon>mdi-printer</v-icon>
@@ -30,6 +38,18 @@
         </v-menu>
       </v-card-title>
       <v-card-text>
+        <v-select
+          v-if="iptCategoriaItems.length > 0"
+          label="Mostrar clientes da categoria:"
+          v-model="iptCategoria"
+          :items="[{id: null, nome: 'TODAS AS CATEGORIAS'}, ...iptCategoriaItems]"
+          item-text="nome"
+          item-value="id"
+          no-data-text="Nenhuma categoria foi cadastrada"
+          :clearable="!!iptCategoria"
+          outlined
+          dense
+        ></v-select>
         <v-text-field
           label="Pesquisar"
           prepend-inner-icon="mdi-magnify"
@@ -39,6 +59,8 @@
           :autofocus="$vuetify.breakpoint.mdAndUp"
           :hint="biometriaDisponivel && $vuetify.breakpoint.mdAndUp ? 'Pressione F2 para buscar por digital' : undefined"
           @keydown="(x) => {if (x.code === 'F2') pesquisarCadastroPorDigital()}"
+          outlined
+          dense
         >
           <template v-slot:append-outer>
             <v-btn color="primary" small @click="pesquisarCadastroPorDigital" v-if="biometriaDisponivel && $vuetify.breakpoint.mdAndUp">
@@ -49,7 +71,7 @@
       </v-card-text>
       <v-data-table
         :headers="tableHeaders"
-        :items="tableItems"
+        :items="tableItemsFiltered"
         :search="tableSearch"
         :dense="tableDense"
         :loading="tableLoading"
@@ -62,6 +84,10 @@
         <template v-slot:[`item.nome`]="{item}">
           <router-link :to="'/cliente/' + item.id">{{ item.nome }}</router-link>
           <v-icon v-if="biometriaDisponivel && !!item.digital" dense class="ml-1">mdi-fingerprint</v-icon>
+        </template>
+        <template v-slot:[`item.categoria`]="{item}">
+          <span v-if="item.categoria">{{ iptCategoriaItems.find(i => i.id === item.categoria).nome }}</span>
+          <small v-else class="grey--text">NENHUMA</small>
         </template>
         <template v-slot:[`item.criado_em`]="{item}">
           <span v-if="item.criado_em">{{ moment(item.criado_em).format('DD/MM/YYYY') }}</span>
@@ -415,6 +441,39 @@
         </v-data-table>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="dialogCategorias" width="40rem">
+      <v-card>
+        <v-card-title>Categorias</v-card-title>
+        <v-card-subtitle>As categorias ajudam organizar os clientes em subdivisões</v-card-subtitle>
+        <v-divider></v-divider>
+        <v-data-table
+          :headers="tableGenericHeaders"
+          :items="iptCategoriaItems"
+          :loading="tableGenericLoading"
+          no-data-text="Não existe categoria, cadastre a primeira.."
+          sort-by="nome"
+        >
+          <template v-slot:[`item.criado_em`]="{item}">
+            <span v-if="item.criado_em">{{ moment(item.criado_em).format('DD/MM/YYYY HH:mm') }}</span>
+            <span v-else class="grey--text">NÃO POSSUI</span>
+          </template>
+          <template v-slot:[`item.acoes`]="{item}">
+            <v-btn color="orange" icon small @click="cadastrarCategoria(item)">
+              <v-icon>mdi-pencil</v-icon>
+            </v-btn>
+            <v-btn color="red" icon small @click="excluirCategoria(item)">
+              <v-icon>mdi-delete</v-icon>
+            </v-btn>
+          </template>
+        </v-data-table>
+        <v-card-actions class="justify-center">
+          <v-btn color="primary" small outlined @click="dialogCategorias = false">Fechar</v-btn>
+          <v-btn color="primary" small depressed @click="cadastrarCategoria(null)">
+            <v-icon small class="mr-1">mdi-plus-circle</v-icon> Cadastrar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </async-container>
 </template>
 
@@ -437,6 +496,7 @@ export default {
     tableHeaders: [
       {value: 'id', text: 'COD.', width: '5.2rem'},
       {value: 'nome', text: 'NOME', cellClass: 'text-no-wrap'},
+      {value: 'categoria', text: 'CATEGORIA', cellClass: 'text-no-wrap'},
       {value: 'vendas', text: 'VENDAS', cellClass: 'text-no-wrap', filterable: false},
       {value: 'criado_em', text: 'DATA CADASTRO', cellClass: 'text-no-wrap', filterable: false},
       {value: 'acoes', text: 'AÇÕES', align: 'center', cellClass: 'text-no-wrap', sortable: false, filterable: false},
@@ -460,6 +520,7 @@ export default {
     dialogTelefones: false,
     dialogObservacoes: false,
     dialogVendas: false,
+    dialogCategorias: false,
 
     tableGenericHeaders: [],
     tableGenericItems: [],
@@ -683,6 +744,26 @@ export default {
         this.tableGenericLoading = false;
       }
     },
+    async visualizarCategorias() {
+      this.tableGenericHeaders = [
+        {value: 'id', text: 'COD.'},
+        {value: 'nome', text: 'NOME', cellClass: 'text-no-wrap'},
+        {value: 'criado_em', text: 'CRIADA EM', cellClass: 'text-no-wrap', filterable: false},
+        {value: 'acoes', text: 'AÇÕES', cellClass: 'text-no-wrap', align: 'center', sortable: false, filterable: false},
+      ];
+      //this.iptCategoriaItems = [];
+      this.tableGenericLoading = true;
+      this.dialogCategorias = true;
+      try {
+        const webclient = http();
+        const {data} = await webclient.get('clientes/categorias');
+        this.iptCategoriaItems = data;
+      } catch (e) {
+        this.dialogCategorias = false;
+      } finally {
+        this.tableGenericLoading = false;
+      }
+    },
     async excluirEndereco(idEndereco) {
       if (!confirm(`Tem certeza que vai apagar o endereço?`)) return;
       this.tableGenericLoading = true;
@@ -727,6 +808,18 @@ export default {
         await webclient.delete(`clientes/observacoes?id=${idObservacao}`);
         const {data} = await webclient.get(`clientes/observacoes?cadastro=${this.iptId}`);
         this.tableGenericItems = data;
+      } finally {
+        this.tableGenericLoading = false;
+      }
+    },
+    async excluirCategoria(categoria) {
+      if (!confirm(`Apagar a categoria "${categoria.nome}"?`)) return;
+      this.tableGenericLoading = true;
+      try {
+        const webclient = http();
+        await webclient.delete(`clientes/categorias?id=${categoria.id}`);
+        const {data} = await webclient.get('clientes/categorias');
+        this.iptCategoriaItems = data;
       } finally {
         this.tableGenericLoading = false;
       }
@@ -804,10 +897,29 @@ export default {
         this.tableGenericLoading = false;
       }
     },
+    async cadastrarCategoria(item = null) {
+      const nome = prompt(
+        !item ? 'Dê um nome para a categoria, digite.' : 'Digite o novo nome desejado para a categoria',
+        !item ? '' : item.nome
+      );
+      if (!nome || nome.trim().length === 0) return;
+      this.tableGenericLoading = true;
+      try {
+        const webclient = http();
+        await webclient.post('clientes/categorias', {'nome': nome.trim().toUpperCase(), 'id': item ? item.id : null})
+        const {data} = await webclient.get('clientes/categorias');
+        this.iptCategoriaItems = data;
+      } finally {
+        this.tableGenericLoading = false;
+      }
+    },
   },
   computed: {
     existeCadastroComDigital() {
       return this.tableItems.findIndex(i => !!i.digital) !== -1;
+    },
+    tableItemsFiltered() {
+      return this.tableItems.filter(i => this.iptCategoria === null || i.categoria === this.iptCategoria);
     },
   },
   async created() {

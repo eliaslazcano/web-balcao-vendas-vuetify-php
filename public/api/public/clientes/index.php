@@ -8,7 +8,7 @@ $db = new DbApp();
 
 if (HttpHelper::isGet()) {
   $id = HttpHelper::obterParametro('id');
-  $categorias = $db->query('SELECT id, nome FROM cliente_categorias', [], ['id']);
+  $categorias = $db->query('SELECT id, nome, criado_em FROM cliente_categorias WHERE deletado_em IS NULL', [], ['id']);
   if ($id) {
     $x = $db->queryPrimeiraLinha('SELECT id, nome, categoria, digital, criado_em FROM clientes WHERE id = :id', [':id' => $id], ['id','categoria']);
     $x['categorias'] = $categorias;
