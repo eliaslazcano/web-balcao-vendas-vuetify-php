@@ -35,6 +35,14 @@ export default new Vuex.Store({
     setToken(state, token) {
       state.token = token;
     },
+    initialiseStore(state) {
+      if(sessionStorage.getItem('store')) {
+        this.replaceState(Object.assign(state, JSON.parse(sessionStorage.getItem('store'))));
+      }
+      this.subscribe((mutation, newState) => {
+        sessionStorage.setItem('store', JSON.stringify(newState));
+      });
+    },
   },
   actions: {
     logout({ commit }) {

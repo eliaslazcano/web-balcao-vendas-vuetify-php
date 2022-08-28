@@ -44,7 +44,7 @@
               dense
             ></v-select>
             <v-text-field
-              v-if="biometriaDisponivel"
+              v-if="config.biometria"
               label="Digital"
               :value="iptDigital ? 'Digital coletada!' : ''"
               :success="!!iptDigital"
@@ -53,7 +53,7 @@
               hide-details
               :append-icon="iptDigital ? 'mdi-close' : undefined"
               @click:append="iptDigital = null"
-              :append-outer-icon="biometriaDisponivel && $vuetify.breakpoint.mdAndUp ? 'mdi-fingerprint' : undefined"
+              :append-outer-icon="config.biometria && $vuetify.breakpoint.mdAndUp ? 'mdi-fingerprint' : undefined"
               @click:append-outer="coletarDigital"
               readonly
               outlined
@@ -84,7 +84,7 @@
         >
           <template v-slot:[`item.criado_em`]="{item}">
             <span v-if="item.criado_em">{{ moment(item.criado_em).format('DD/MM/YYYY HH:mm') }}</span>
-            <span v-else class="grey--text">NÃO POSSUI</span>
+            <small v-else class="grey--text">NÃO POSSUI</small>
           </template>
           <template v-slot:[`item.tipo`]="{item}">
             <v-icon v-if="item.tipo === 1">mdi-phone</v-icon>
@@ -100,7 +100,7 @@
       <v-card class="mb-5">
         <v-card-title class="justify-space-between">
           E-mails
-          <v-btn color="success" small depressed @click="cadastrarEmail">Adicionar</v-btn>
+          <v-btn color="success" small depressed @click="dialogEmail = true">Adicionar</v-btn>
         </v-card-title>
         <v-divider></v-divider>
         <v-data-table
@@ -113,7 +113,19 @@
         >
           <template v-slot:[`item.criado_em`]="{item}">
             <span v-if="item.criado_em">{{ moment(item.criado_em).format('DD/MM/YYYY HH:mm') }}</span>
-            <span v-else class="grey--text">NÃO POSSUI</span>
+            <small v-else class="grey--text">NÃO POSSUI</small>
+          </template>
+          <template v-slot:[`item.autorizado`]="{item}">
+            <div class="d-flex justify-center">
+              <v-switch
+                v-model="item.autorizado"
+                dense
+                hide-details
+                :disabled="tbEmailsLoading"
+                :loading="tbEmailsLoading && iptEmailId === item.id"
+                @change="atualizarEmail(item)"
+              ></v-switch>
+            </div>
           </template>
           <template v-slot:[`item.acoes`]="{item}">
             <v-btn icon small color="red" @click="excluirEmail(item.id)">
@@ -138,7 +150,7 @@
         >
           <template v-slot:[`item.criado_em`]="{item}">
             <span v-if="item.criado_em">{{ moment(item.criado_em).format('DD/MM/YYYY HH:mm') }}</span>
-            <span v-else class="grey--text">NÃO POSSUI</span>
+            <small v-else class="grey--text">NÃO POSSUI</small>
           </template>
           <template v-slot:[`item.acoes`]="{item}">
             <v-btn icon small color="red" @click="excluirEndereco(item.id)">
@@ -163,7 +175,7 @@
         >
           <template v-slot:[`item.criado_em`]="{item}">
             <span v-if="item.criado_em">{{ moment(item.criado_em).format('DD/MM/YYYY HH:mm') }}</span>
-            <span v-else class="grey--text">NÃO POSSUI</span>
+            <small v-else class="grey--text">NÃO POSSUI</small>
           </template>
           <template v-slot:[`item.acoes`]="{item}">
             <v-btn icon small color="red" @click="excluirObservacao(item.id)">
@@ -185,7 +197,7 @@
         >
           <template v-slot:[`item.criado_em`]="{item}">
             <span v-if="item.criado_em">{{ moment(item.criado_em).format('DD/MM/YYYY HH:mm') }}</span>
-            <span v-else class="grey--text">NÃO POSSUI</span>
+            <small v-else class="grey--text">NÃO POSSUI</small>
           </template>
           <template v-slot:[`item.id`]="{item}">
             {{item.id}}
@@ -271,6 +283,21 @@
         </v-form>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="dialogEmail" width="24rem" :persistent="tbEmailsLoading">
+      <v-card>
+        <v-card-title>Cadastrar E-mail</v-card-title>
+        <v-form ref="form-email" :disabled="tbEmailsLoading" @submit.prevent="cadastrarEmail">
+          <v-card-text>
+            <v-text-field label="Endereço de e-mail" v-model="iptEmail" :rules="iptEmailRules" outlined dense></v-text-field>
+            <v-switch label="Cliente autoriza enviar mensagens" class="mt-2" v-model="iptEmailAutorizado" hide-details dense inset></v-switch>
+          </v-card-text>
+          <v-card-actions class="justify-center pt-0">
+            <v-btn color="primary" small outlined @click="dialogEmail = false" :disabled="tbEmailsLoading">Fechar</v-btn>
+            <v-btn color="primary" small depressed type="submit" :loading="tbEmailsLoading">Salvar</v-btn>
+          </v-card-actions>
+        </v-form>
+      </v-card>
+    </v-dialog>
   </async-container>
 </template>
 
@@ -290,7 +317,7 @@ export default {
   },
   data: () => ({
     moment,
-    biometriaDisponivel: config.biometria,
+    config,
     webclient: http(),
     loading: true,
     loadingBasico: false,
@@ -308,7 +335,12 @@ export default {
     tbTelefonesItems: [],
     tbTelefonesLoading: false,
 
-    tbEmailsHeaders: [
+    tbEmailsHeaders: config.smtp ? [
+      {value: 'criado_em', text: 'DATA', width: '9.2rem', cellClass: 'text-no-wrap'},
+      {value: 'email', text: 'E-MAIL', cellClass: 'text-no-wrap', sortable: false},
+      {value: 'autorizado', text: 'MSG AUTORIZADA', align: 'center', sortable: false},
+      {value: 'acoes', text: 'EXCLUIR', width: '5.4rem', align: 'center', cellClass: 'text-no-wrap', sortable: false, filterable: false},
+    ] : [
       {value: 'criado_em', text: 'DATA', width: '9.2rem', cellClass: 'text-no-wrap'},
       {value: 'email', text: 'E-MAIL', cellClass: 'text-no-wrap', sortable: false},
       {value: 'acoes', text: 'EXCLUIR', width: '5.4rem', align: 'center', cellClass: 'text-no-wrap', sortable: false, filterable: false},
@@ -360,6 +392,15 @@ export default {
       v => (!!v && !!v.trim()) || 'Insira a rua e número neste campo',
       v => (!!v && StringHelper.extractNumbers(v).length > 0) || 'O logradouro está sem o número',
     ],
+
+    dialogEmail: false,
+    iptEmailId: null,
+    iptEmail: '',
+    iptEmailRules: [
+      v => !!v || 'Falta o endereço de e-mail',
+      v => /.+@.+\..+/.test(v) || 'Digite um e-mail válido',
+    ],
+    iptEmailAutorizado: false,
   }),
   computed: {
     totalArrecadado() {
@@ -473,16 +514,17 @@ export default {
       }
     },
     async cadastrarEmail() {
-      const email = prompt('Digite o endereço de e-mail');
-      if (!email || email.trim().length === 0) return;
-      if (!/.+@.+\..+/.test(email)) {
-        this.$store.commit('showSnackbar', {color: 'error', text: 'E-mail inválido'});
-        return;
-      }
+      if (!this.$refs['form-email'].validate()) return;
       this.tbEmailsLoading = true;
       try {
-        await this.webclient.post('clientes/emails', {cadastro: this.id, email: email.trim().toLowerCase()})
+        const dados = {
+          cadastro: this.id,
+          email: this.iptEmail.trim().toLowerCase(),
+          autorizado: this.iptEmailAutorizado
+        };
+        await this.webclient.post('clientes/emails', dados)
         await this.loadEmails();
+        this.dialogEmail = false;
       } finally {
         this.tbEmailsLoading = false;
       }
@@ -521,6 +563,25 @@ export default {
         this.tbObsLoading = false;
       }
     },
+    async atualizarEmail(item) {
+      console.log(item);
+      this.tbEmailsLoading = true;
+      this.iptEmailId = item.id;
+      try {
+        const dados = {
+          id: item.id,
+          cadastro: this.id,
+          email: item.email,
+          autorizado: item.autorizado
+        };
+        await this.webclient.post('clientes/emails', dados)
+        await this.loadEmails();
+        this.dialogEmail = false;
+      } finally {
+        this.iptEmailId = null;
+        this.tbEmailsLoading = false;
+      }
+    },
     coletarDigital() {
       if (this.iptDigital && !confirm('Isso irá substituir a digital atual do cadastro, tem certeza?')) return;
       const biometriaNitgen = new BiometriaNitgen();
@@ -551,6 +612,9 @@ export default {
     },
     dialogEndereco(v) {
       if (!v && this.$refs['form-endereco']) this.$refs['form-endereco'].reset();
+    },
+    dialogEmail(v) {
+      if (!v && this.$refs['form-email']) this.$refs['form-email'].reset();
     },
     iptCep(v) {
       if (v && StringHelper.extractNumbers(v).length === 8) {

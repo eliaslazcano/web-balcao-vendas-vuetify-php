@@ -3,8 +3,10 @@ create table cliente_categorias
 	id int unsigned auto_increment
 		primary key,
 	nome varchar(100) null,
+	criado_em datetime default current_timestamp() null,
 	deletado_em datetime null
-);
+)
+comment 'ajuda organizar os clientes em subdivisoes';
 
 create table clientes
 (
@@ -26,6 +28,7 @@ create table cliente_emails
 		primary key,
 	cliente int unsigned not null,
 	email varchar(100) null,
+	autorizado tinyint(1) default 0 not null comment 'cliente autorizou receber mensagens do estabelecimento',
 	criado_em datetime default current_timestamp() null,
 	deletado_em datetime null,
 	constraint cliente_emails_clientes_id_fk
@@ -88,15 +91,41 @@ create table despesas
 	deletado_em datetime null
 );
 
+create table dispositivos_rfid
+(
+	id int unsigned auto_increment
+		primary key,
+	rfid varchar(32) null,
+	descricao varchar(64) null,
+	criado_em datetime default current_timestamp() null,
+	deletado_em datetime null,
+	constraint rfid
+		unique (rfid)
+);
+
+create table produto_categorias
+(
+	id int unsigned auto_increment
+		primary key,
+	nome varchar(100) null,
+	criado_em datetime default current_timestamp() null,
+	deletado_em datetime null
+)
+comment 'ajuda organizar os produtos em subdivisoes';
+
 create table produtos
 (
 	id int unsigned auto_increment
 		primary key,
 	nome varchar(128) null,
+	categoria int unsigned null,
 	codigo varchar(128) null,
 	valor decimal(6,2) default 0.00 not null,
 	criado_em datetime default current_timestamp() null,
-	deletado_em datetime null
+	deletado_em datetime null,
+	constraint produtos_produto_categorias_id_fk
+		foreign key (categoria) references produto_categorias (id)
+			on update cascade on delete set null
 );
 
 create table usuarios
@@ -108,7 +137,7 @@ create table usuarios
 	nome varchar(192) null,
 	email varchar(100) null,
 	criado_em datetime default current_timestamp() not null,
-	inativado_em datetime default null,
+	inativado_em datetime null,
 	constraint login
 		unique (login)
 );
@@ -126,6 +155,22 @@ create table sessoes
 		foreign key (usuario) references usuarios (id)
 			on update cascade on delete cascade
 );
+
+create table usuario_recoveries
+(
+	id int unsigned auto_increment
+		primary key,
+	usuario int unsigned not null,
+	email varchar(128) null,
+	codigo varchar(6) not null,
+	ip varchar(50) null,
+	criado_em datetime default current_timestamp() not null,
+	utilizado_em datetime null comment 'null = nao utilizado',
+	constraint usuario_resets_usuario_id_fk
+		foreign key (usuario) references usuarios (id)
+			on update cascade on delete cascade
+)
+comment 'solicitacoes de recuperacao de senha';
 
 create table vendas
 (
@@ -165,7 +210,7 @@ create table venda_rfids
 (
 	id int unsigned auto_increment
 		primary key,
-	rfid varchar(32) null,
+	rfid varchar(32) null comment 'codigo do RFID',
 	venda int unsigned not null,
 	criado_em datetime default current_timestamp() null,
 	desvinculado_em datetime null,

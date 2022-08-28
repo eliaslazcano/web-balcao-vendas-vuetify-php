@@ -8,4 +8,5 @@ export const config = {
   login: true, //boolean. Habilita o sistema de login para acessar o app;
   biometria: false, //boolean. Habilita a interface para interagir com os leitores da Nitgen;
   rfid: false, //boolean. Habilita a interface para interagir com leitores de RFID (aproximacao);
+  smtp: true, //boolean. Habilita as funcionalidades do sistema que dependem de um servidor de e-mail;
 };

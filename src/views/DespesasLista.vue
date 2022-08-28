@@ -1,6 +1,6 @@
 <template>
   <async-container :loading="loading">
-    <v-card width="62rem" class="mx-auto mb-12">
+    <v-card width="72rem" class="mx-auto mb-12">
       <v-card-title class="justify-space-between">
         Despesas
         <v-menu left bottom offset-y class="d-print-none">
@@ -70,10 +70,10 @@
         sort-by="id"
         sort-desc
       >
+        <template v-slot:[`item.criado_em`]="{item}">{{ moment(item.criado_em).format('DD/MM/YYYY HH:mm') }}</template>
         <template v-slot:[`item.valor`]="{item}">
           <span style="white-space: nowrap">R$ {{ formatoMonetario(item.valor) }}</span>
         </template>
-        <template v-slot:[`item.criado_em`]="{item}">{{ moment(item.criado_em).format('DD/MM/YYYY HH:mm') }}</template>
         <template v-slot:[`item.acoes`]="{item}">
           <v-btn color="yellow darken-4" small icon @click="editarItem(item)">
             <v-icon>mdi-pencil</v-icon>
@@ -85,10 +85,10 @@
         <template v-slot:foot>
           <tfoot>
           <tr>
-            <td colspan="2">
+            <td colspan="3">
               <p class="subtitle-2 primary--text mb-0">TOTAL</p>
             </td>
-            <td colspan="3">
+            <td colspan="2">
               <p class="subtitle-2 primary--text mb-0">R$ {{ formatoMonetario(valorTotal) }}</p>
             </td>
           </tr>
@@ -138,10 +138,10 @@ export default {
     tableLoading: true,
     tableItems: [],
     tableHeaders: [
-      {value: 'id', text: 'COD.'},
+      {value: 'id', text: 'Nº'},
+      {value: 'criado_em', text: 'DATA', cellClass: 'text-no-wrap', filterable: false},
       {value: 'descricao', text: 'DESCRICAO'},
       {value: 'valor', text: 'VALOR', cellClass: 'text-no-wrap'},
-      {value: 'criado_em', text: 'DATA', cellClass: 'text-no-wrap', filterable: false},
       {value: 'acoes', text: 'AÇÕES', align: 'center', cellClass: 'text-no-wrap', sortable: false, filterable: false},
     ],
     tableDense: false,

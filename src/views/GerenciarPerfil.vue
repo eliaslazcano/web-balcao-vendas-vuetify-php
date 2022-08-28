@@ -2,7 +2,7 @@
   <async-container :loading="loading">
     <v-card width="24rem" class="mx-auto" :loading="loadingCardPerfil">
       <v-form ref="form-perfil" :disabled="loadingCardPerfil" @submit.prevent="submitPerfil">
-        <v-card-title>Meu perfil</v-card-title>
+        <v-card-title>Seu perfil</v-card-title>
         <v-card-text>
           <v-text-field label="Nome" v-model="iptNome" outlined dense :rules="rulesNome"></v-text-field>
           <v-text-field label="Login" v-model="iptLogin" outlined dense :rules="rulesLogin"></v-text-field>
