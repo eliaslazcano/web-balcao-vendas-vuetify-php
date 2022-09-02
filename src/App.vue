@@ -228,7 +228,7 @@ export default {
 thead.v-data-table-header th {
   white-space: nowrap;
 }
-.v-dialog {
+.v-dialog:not(.v-dialog--fullscreen) {
   margin: .8rem !important;
 }
 .cursor-pointer {
