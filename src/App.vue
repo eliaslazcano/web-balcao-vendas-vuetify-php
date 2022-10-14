@@ -174,11 +174,13 @@
       :value="$store.state.snackbarShow"
       @input="$store.commit('hideSnackbar')"
     >
-      <v-icon size="20" class="mr-2" v-if="$store.state.snackbarColor === 'warning'">mdi-alert</v-icon>
-      <v-icon size="20" class="mr-2" v-else-if="$store.state.snackbarColor === 'success'">mdi-check</v-icon>
-      <v-icon size="20" class="mr-2" v-else-if="$store.state.snackbarColor === 'error'">mdi-close</v-icon>
-      <v-icon size="20" class="mr-2" v-else-if="$store.state.snackbarColor === 'info'">mdi-information</v-icon>
-      <strong style="text-transform: uppercase">{{$store.state.snackbarText}}</strong>
+      <div class="d-flex">
+        <v-icon small class="mr-2" v-if="$store.state.snackbarColor === 'warning'">mdi-alert</v-icon>
+        <v-icon small class="mr-2" v-else-if="$store.state.snackbarColor === 'success'">mdi-check</v-icon>
+        <v-icon small class="mr-2" v-else-if="$store.state.snackbarColor === 'error'">mdi-alert-octagon</v-icon>
+        <v-icon small class="mr-2" v-else-if="$store.state.snackbarColor === 'info'">mdi-information</v-icon>
+        <div style="text-transform: uppercase; font-weight: 600">{{$store.state.snackbarText}}</div>
+      </div>
     </v-snackbar>
   </v-app>
 </template>
@@ -216,10 +218,11 @@ export default {
 
 <style>
 .v-application--is-ltr .v-data-footer__select div.v-select {
-  margin-left: 8px;
+  margin-left: 4px;
 }
 .v-application--is-ltr div.v-data-footer__select {
-  margin-right: 0;
+  margin-right: auto;
+  margin-left: 6px;
 }
 .v-application--is-ltr div.v-data-footer__pagination {
   margin-left: 6px;

@@ -2,7 +2,7 @@
 /**
  * Oferece ferramentas para interagir com a requisição HTTP.
  * @author Elias Lazcano Castro Neto
- * @version 2022-06-04
+ * @version 2022-08-28
  * @since 5.3
  */
 
